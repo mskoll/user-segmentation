@@ -47,14 +47,14 @@ func (r *UserRepo) UsersSegments(ctx context.Context, id int) ([]entity.Segment,
 
 	var segments []entity.Segment
 
-	segmentQuery := "SELECT st.name FROM segment st INNER JOIN user_segment ust ON st.id = ust.segment_id WHERE ust.user_id = $1"
+	segmentQuery := "SELECT st.id, st.name FROM segment st INNER JOIN user_segment ust ON st.id = ust.segment_id WHERE ust.user_id = $1"
 	err := r.db.Select(&segments, segmentQuery, id)
 
 	return segments, err
 }
 
 func (r *UserRepo) AddSegment(ctx context.Context, id int, toAdd []string) error {
-
+	// todo: add check if exists
 	segments := make([]entity.UserSegment, len(toAdd))
 
 	for i, segment := range toAdd {

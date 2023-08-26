@@ -37,18 +37,18 @@ func (s *UserService) CreateUser(ctx context.Context, user entity.User) (int, er
 	return id, err
 }
 
-func (s *UserService) AddDeleteSegment(ctx context.Context, id int, toAdd []string, toDelete []string) error {
+func (s *UserService) AddDeleteSegment(ctx context.Context, segments entity.AddDelSegments) error {
 
-	if len(toAdd) != 0 {
+	if len(segments.ToAdd) != 0 {
 
-		if err := s.repo.AddSegment(ctx, id, toAdd); err != nil {
+		if err := s.repo.AddSegment(ctx, segments.Id, segments.ToAdd); err != nil {
 			return err
 		}
 	}
 
-	if len(toDelete) != 0 {
+	if len(segments.ToDel) != 0 {
 
-		if err := s.repo.DeleteSegment(ctx, id, toDelete); err != nil {
+		if err := s.repo.DeleteSegment(ctx, segments.Id, segments.ToDel); err != nil {
 			return err
 		}
 	}

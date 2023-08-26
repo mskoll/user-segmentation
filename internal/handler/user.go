@@ -30,8 +30,6 @@ func (h *Handler) userById(ctx echo.Context) error {
 		return ctx.String(http.StatusBadRequest, err.Error())
 	}
 
-	// todo: refactor to segmentList
-	// var res entity.SegmentList
 	res, err := h.services.UserById(ctx.Request().Context(), id)
 	if err != nil {
 		return ctx.String(http.StatusInternalServerError, err.Error())
@@ -47,9 +45,8 @@ func (h *Handler) addDelSegment(ctx echo.Context) error {
 	if err := ctx.Bind(&segments); err != nil {
 		return ctx.String(http.StatusBadRequest, err.Error())
 	}
-	// todo: refactor to addDelSegments
-	// AddDelSegment(ctx, segments)
-	err := h.services.AddDeleteSegment(ctx.Request().Context(), segments.Id, segments.ToAdd, segments.ToDel)
+
+	err := h.services.AddDeleteSegment(ctx.Request().Context(), segments)
 	if err != nil {
 		return ctx.String(http.StatusInternalServerError, err.Error())
 	}
