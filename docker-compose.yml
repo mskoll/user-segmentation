@@ -1,0 +1,33 @@
+version: "3.8"
+services:
+
+  app:
+    container_name: app
+    build: .
+    environment:
+      DATABASE_URL: "host=postgres user=admin password=admin dbname=segmdb sslmode=disable"
+    env_file:
+      - .env
+    ports:
+      - "8000:8000"
+    volumes:
+      - .:/src/app
+    command: go run cmd/main.go
+    depends_on:
+      - postgres
+
+
+  postgres:
+    container_name: postgres
+    image: postgres:15.0
+    environment:
+      - POSTGRES_USER=${DB_USER}
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+      - POSTGRES_DB=${DB_NAME}
+    volumes:
+      - ./config/init.sql:/docker-entrypoint-initdb.d/10-init.sql
+      - postgres-db:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+volumes:
+  postgres-db:
