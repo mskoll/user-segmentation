@@ -16,7 +16,7 @@ type User interface {
 
 type Segment interface {
 	CreateSegment(ctx context.Context, segment entity.Segment) (int, error)
-	Delete(ctx context.Context, id int) error
+	Delete(ctx context.Context, name string) error
 }
 
 type Operation interface {

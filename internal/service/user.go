@@ -13,21 +13,45 @@ type UserService struct {
 func NewUser(repo repo.User) *UserService {
 	return &UserService{repo: repo}
 }
-func (s *UserService) UserById(ctx context.Context, id int) ([]entity.Segment, error) {
+
+func (s *UserService) UserById(ctx context.Context, id int) (entity.SegmentList, error) {
+
+	var segments entity.SegmentList
+
 	user, err := s.repo.UserById(ctx, id)
-	return user, err
+	if err != nil {
+		return entity.SegmentList{}, err
+	}
+
+	segments.User = user
+
+	segments.Segments, err = s.repo.UsersSegments(ctx, id)
+
+	return segments, err
 }
 
 func (s *UserService) CreateUser(ctx context.Context, user entity.User) (int, error) {
-	userId, err := s.repo.CreateUser(ctx, user)
-	return userId, err
+
+	id, err := s.repo.CreateUser(ctx, user)
+
+	return id, err
 }
 
 func (s *UserService) AddDeleteSegment(ctx context.Context, id int, toAdd []string, toDelete []string) error {
-	err := s.repo.AddSegment(ctx, id, toAdd)
-	if err != nil {
-		return err
+
+	if len(toAdd) != 0 {
+
+		if err := s.repo.AddSegment(ctx, id, toAdd); err != nil {
+			return err
+		}
 	}
-	//err = s.repo.DeleteSegment(ctx, id, toDelete)
-	return err
+
+	if len(toDelete) != 0 {
+
+		if err := s.repo.DeleteSegment(ctx, id, toDelete); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }

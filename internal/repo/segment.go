@@ -34,7 +34,7 @@ func (r *SegmentRepo) CreateSegment(ctx context.Context, segment entity.Segment)
 	return segmentId, tx.Commit()
 }
 
-func (r *SegmentRepo) Delete(ctx context.Context, id int) error {
+func (r *SegmentRepo) Delete(ctx context.Context, name string) error {
 	//TODO implement me
 	panic("implement me")
 }
