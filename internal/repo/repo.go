@@ -8,15 +8,15 @@ import (
 
 type User interface {
 	CreateUser(ctx context.Context, user entity.User) (int, error)
-	GetById(ctx context.Context, id int) (entity.User, error)
-	AddDeleteSegment(ctx context.Context, id int, toAdd []entity.Segment, toDelete []entity.Segment) error
+	UserById(ctx context.Context, id int) (entity.User, error)
+	UsersSegments(ctx context.Context, id int) ([]entity.Segment, error)
+	AddSegment(ctx context.Context, id int, toAdd []string) error
+	DeleteSegment(ctx context.Context, id int, toDelete []string) error
 }
 
 type Segment interface {
-	Create(ctx context.Context, segment entity.Segment) (int, error)
+	CreateSegment(ctx context.Context, segment entity.Segment) (int, error)
 	Delete(ctx context.Context, id int) error
-	// AddUser(ctx context.Context, segmId int, userId int) error
-	// DeleteUser(ctx context.Context, segmId int, userId int) error
 }
 
 type Operation interface {

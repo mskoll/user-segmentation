@@ -2,8 +2,6 @@ package repo
 
 import (
 	"context"
-	"fmt"
-	"github.com/davecgh/go-spew/spew"
 	"github.com/jmoiron/sqlx"
 	"userSegmentation/internal/entity"
 )
@@ -23,10 +21,10 @@ func (r *UserRepo) CreateUser(ctx context.Context, user entity.User) (int, error
 		return 0, err
 	}
 
-	var userId int
-	userQuery := fmt.Sprintf("INSERT INTO %s (username) VALUES ($1) RETURNING id", userTable)
-
+	userQuery := "INSERT INTO users (username) VALUES ($1) RETURNING id"
 	row := tx.QueryRow(userQuery, user.Username)
+
+	var userId int
 	if err = row.Scan(&userId); err != nil {
 		tx.Rollback()
 		return 0, err
@@ -35,46 +33,79 @@ func (r *UserRepo) CreateUser(ctx context.Context, user entity.User) (int, error
 	return userId, tx.Commit()
 }
 
-func (r *UserRepo) GetById(ctx context.Context, id int) (entity.User, error) {
+func (r *UserRepo) UserById(ctx context.Context, id int) (entity.User, error) {
+
 	var user entity.User
 
-	userQuery := fmt.Sprintf("SELECT * FROM %s WHERE id = $1", userTable)
-
+	userQuery := "SELECT * FROM users WHERE id = $1"
 	err := r.db.Get(&user, userQuery, id)
-	if err != nil {
-		return entity.User{}, err
-	}
-	var segments []entity.Segment
-	segmentQuery := fmt.Sprintf("SELECT st.name FROM %s st INNER JOIN %s slt ON st.id = slt.segment_id WHERE slt.user_id = $1", segmentTable, userSegmentTable)
-	err = r.db.Select(&segments, segmentQuery, id)
 
-	return user, nil
+	return user, err
 }
-func (r *UserRepo) AddDeleteSegment(ctx context.Context, id int, toAdd []entity.Segment, toDelete []entity.Segment) error {
+
+func (r *UserRepo) UsersSegments(ctx context.Context, id int) ([]entity.Segment, error) {
+
+	var segments []entity.Segment
+
+	segmentQuery := "SELECT st.name FROM segment st INNER JOIN user_segment ust ON st.id = ust.segment_id WHERE ust.user_id = $1"
+	err := r.db.Select(&segments, segmentQuery, id)
+
+	return segments, err
+}
+
+func (r *UserRepo) AddSegment(ctx context.Context, id int, toAdd []string) error {
+
+	segments := make([]entity.UserSegment, len(toAdd))
+
+	for i, segment := range toAdd {
+
+		segments[i].UserId = id
+		segmentQuery := "SELECT id FROM segment WHERE name LIKE $1"
+		if err := r.db.Get(&segments[i].SegmentId, segmentQuery, segment); err != nil {
+			return err
+		}
+	}
+
 	tx, err := r.db.Begin()
 	if err != nil {
 		return err
 	}
 
-	segmentsToDelete := make([]entity.UserSegment, len(toDelete))
-	for i, segment := range toDelete {
-		segmentQuery := spew.Sprintf("SELECT id FROM %s WHERE NAME LIKE $1", segmentTable)
-		err = r.db.Get(&segmentsToDelete[i].SegmentId, segmentQuery, segment.Name)
-		segmentsToDelete[i].UserId = id
-	}
+	usersSegmentQuery := "INSERT INTO user_segment (user_id, segment_id) VALUES (:user_id, :segment_id)"
 
-	segmentsToAdd := make([]entity.UserSegment, len(toAdd))
-	for i, segment := range toAdd {
-		segmentQuery := spew.Sprintf("SELECT id FROM %s WHERE NAME LIKE $1", segmentTable)
-		err = r.db.Get(&segmentsToAdd[i].SegmentId, segmentQuery, segment.Name)
-		segmentsToDelete[i].UserId = id
-	}
-
-	_, err = r.db.NamedExec(fmt.Sprintf("INSERT INTO %s (user_id, segment_id) VALUES (:user_id, :segment_id)",
-		userSegmentTable), segmentsToAdd)
-	if err != nil {
+	if _, err = r.db.NamedExec(usersSegmentQuery, segments); err != nil {
 		tx.Rollback()
 		return err
 	}
+
+	return tx.Commit()
+}
+
+func (r *UserRepo) DeleteSegment(ctx context.Context, id int, toDelete []string) error {
+
+	segments := make([]int, len(toDelete))
+
+	for i, segment := range toDelete {
+
+		segmentQuery := "SELECT id FROM segment WHERE name LIKE $1"
+		if err := r.db.Get(&segments[i], segmentQuery, segment); err != nil {
+			return err
+		}
+	}
+
+	tx, err := r.db.Begin()
+	if err != nil {
+		return err
+	}
+
+	for _, segment := range segments {
+
+		usersSegmentQuery := "DELETE FROM user_segment WHERE user_id = $1 AND segment_id = $2"
+		if _, err = r.db.Exec(usersSegmentQuery, id, segment); err != nil {
+			tx.Rollback()
+			return err
+		}
+	}
+
 	return tx.Commit()
 }

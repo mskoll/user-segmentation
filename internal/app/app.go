@@ -1,10 +1,14 @@
 package app
 
 import (
+	"context"
 	"github.com/labstack/echo/v4"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 	"net/http"
+	"os"
+	"os/signal"
+	"time"
 	"userSegmentation/internal/handler"
 	"userSegmentation/internal/repo"
 	"userSegmentation/internal/service"
@@ -13,11 +17,9 @@ import (
 
 func Run() {
 
-	// config
 	if err := initConfig(); err != nil {
 		log.Fatalf("Config error: %s", err.Error())
 	}
-	// logger
 	logger.Init()
 
 	// repo (pg)
@@ -46,30 +48,21 @@ func Run() {
 
 	handlers.Route(e)
 	s := &http.Server{Addr: ":8000"}
-	e.Logger.Fatal(e.StartServer(s))
-	//serv := new(server.Server)
-	//go func() {
-	//	if err := serv.Run(viper.GetString("port"), handlers); err != nil {
-	//		log.Printf("Server error: %s", err.Error())
-	//	}
-	//}()
-	log.Printf("Server started\n")
 
-	//
-	//stop := make(chan os.Signal, 1)
-	//
-	//signal.Notify(stop, os.Interrupt)
-	//<-stop
+	go func() {
+		if err := e.StartServer(s); err != nil && err != http.ErrServerClosed {
+			log.Fatal("shutting down the server")
+		}
+	}()
 
-	//ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	//defer cancel()
-	//if err := serv.Shutdown(ctx); err != nil {
-	//	log.Printf("Server shutdown error: %s", err.Error())
-	//}
-	//
-	//if err := db.Close(); err != nil {
-	//	log.Printf("DB connection close error: %s", err.Error())
-	//}
+	quit := make(chan os.Signal, 1)
+	signal.Notify(quit, os.Interrupt)
+	<-quit
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	if err := e.Shutdown(ctx); err != nil {
+		e.Logger.Fatal(err)
+	}
 }
 
 func initConfig() error {

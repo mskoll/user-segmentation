@@ -15,7 +15,7 @@ func NewSegment(db *sqlx.DB) *SegmentRepo {
 	return &SegmentRepo{db: db}
 }
 
-func (r *SegmentRepo) Create(ctx context.Context, segment entity.Segment) (int, error) {
+func (r *SegmentRepo) CreateSegment(ctx context.Context, segment entity.Segment) (int, error) {
 
 	tx, err := r.db.Begin()
 	if err != nil {
