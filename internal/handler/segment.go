@@ -13,7 +13,7 @@ func (h *Handler) createSegment(ctx echo.Context) error {
 		return ctx.String(http.StatusBadRequest, err.Error())
 	}
 
-	id, err := h.services.Create(ctx.Request().Context(), segment)
+	id, err := h.services.CreateSegment(ctx.Request().Context(), segment)
 	if err != nil {
 		return ctx.String(http.StatusInternalServerError, err.Error())
 	}

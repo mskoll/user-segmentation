@@ -48,7 +48,7 @@ func (s *UserService) AddDeleteSegment(ctx context.Context, segments entity.AddD
 
 	if len(segments.ToDel) != 0 {
 
-		if err := s.repo.DeleteSegment(ctx, segments.Id, segments.ToDel); err != nil {
+		if err := s.repo.DeleteSegmentFromUser(ctx, segments.Id, segments.ToDel); err != nil {
 			return err
 		}
 	}

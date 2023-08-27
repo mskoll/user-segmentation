@@ -47,7 +47,8 @@ func (r *UserRepo) UsersSegments(ctx context.Context, id int) ([]entity.Segment,
 
 	var segments []entity.Segment
 
-	segmentQuery := "SELECT st.id, st.name FROM segment st INNER JOIN user_segment ust ON st.id = ust.segment_id WHERE ust.user_id = $1"
+	segmentQuery := "SELECT st.id, st.name FROM segment st INNER JOIN user_segment ust ON st.id = ust.segment_id " +
+		"WHERE ust.user_id = $1 AND (ust.deleted_at IS NULL OR ust.deleted_at > now())"
 	err := r.db.Select(&segments, segmentQuery, id)
 
 	return segments, err
@@ -71,7 +72,7 @@ func (r *UserRepo) AddSegment(ctx context.Context, id int, toAdd []string) error
 		return err
 	}
 
-	usersSegmentQuery := "INSERT INTO user_segment (user_id, segment_id) VALUES (:user_id, :segment_id)"
+	usersSegmentQuery := "INSERT INTO user_segment (user_id, segment_id) VALUES (:user_id, :segment_id) ON CONFLICT DO NOTHING"
 
 	if _, err = r.db.NamedExec(usersSegmentQuery, segments); err != nil {
 		tx.Rollback()
@@ -81,7 +82,7 @@ func (r *UserRepo) AddSegment(ctx context.Context, id int, toAdd []string) error
 	return tx.Commit()
 }
 
-func (r *UserRepo) DeleteSegment(ctx context.Context, id int, toDelete []string) error {
+func (r *UserRepo) DeleteSegmentFromUser(ctx context.Context, id int, toDelete []string) error {
 
 	segments := make([]int, len(toDelete))
 
@@ -100,7 +101,7 @@ func (r *UserRepo) DeleteSegment(ctx context.Context, id int, toDelete []string)
 
 	for _, segment := range segments {
 
-		usersSegmentQuery := "DELETE FROM user_segment WHERE user_id = $1 AND segment_id = $2"
+		usersSegmentQuery := "UPDATE user_segment SET deleted_at = now() WHERE user_id = $1 AND segment_id = $2"
 		if _, err = r.db.Exec(usersSegmentQuery, id, segment); err != nil {
 			tx.Rollback()
 			return err
