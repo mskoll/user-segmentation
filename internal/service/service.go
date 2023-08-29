@@ -10,7 +10,7 @@ type User interface {
 	CreateUser(ctx context.Context, user entity.User) (int, error)
 	UserById(ctx context.Context, id int) (entity.SegmentList, error)
 	AddDeleteSegment(ctx context.Context, segments entity.AddDelSegments) error
-	Operations(ctx context.Context, userOperations entity.UsersOperations) ([]entity.Operation, error)
+	Operations(ctx context.Context, userOperations entity.UserOperations) ([]entity.Operation, error)
 }
 
 type Segment interface {

@@ -13,18 +13,17 @@ type SegmentList struct {
 }
 
 type AddDelSegments struct {
-	UserId int             `json:"user-id"`
+	UserId int             `json:"user_id"`
 	ToAdd  []SegmentToUser `json:"to_add"`
 	ToDel  []SegmentToUser `json:"to_del"`
 }
 
 type SegmentToUser struct {
-	Id   int       `json:"id"`
-	Name string    `json:"name"`
-	Ttl  time.Time `json:"ttl"`
+	Name      string     `json:"name"`
+	DeletedAt *time.Time `json:"ttl" db:"deleted_at"`
 }
 
-type UsersOperations struct {
+type UserOperations struct {
 	Id    int `json:"id"`
 	Month int `json:"month"`
 	Year  int `json:"year"`

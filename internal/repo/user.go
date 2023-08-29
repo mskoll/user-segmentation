@@ -54,24 +54,8 @@ func (r *UserRepo) UsersSegments(ctx context.Context, id int) ([]entity.Segment,
 	return segments, err
 }
 
-func (r *UserRepo) AddSegment(ctx context.Context, id int, toAdd []entity.UserSegment) error {
+func (r *UserRepo) AddSegment(ctx context.Context, segments []entity.UserSegment) error {
 
-	tx, err := r.db.Begin()
-	if err != nil {
-		return err
-	}
-
-	usersSegmentQuery := "INSERT INTO user_segment (user_id, segment_id) VALUES (:user_id, :segment_id)"
-
-	if _, err = r.db.NamedExec(usersSegmentQuery, toAdd); err != nil {
-		tx.Rollback()
-		return err
-	}
-
-	return tx.Commit()
-}
-
-func (r *UserRepo) AddSegmentWithTtl(ctx context.Context, id int, toAdd []entity.UserSegment) error {
 	tx, err := r.db.Begin()
 	if err != nil {
 		return err
@@ -79,7 +63,7 @@ func (r *UserRepo) AddSegmentWithTtl(ctx context.Context, id int, toAdd []entity
 
 	usersSegmentQuery := "INSERT INTO user_segment (user_id, segment_id, deleted_at) VALUES (:user_id, :segment_id, :deleted_at)"
 
-	if _, err = r.db.NamedExec(usersSegmentQuery, toAdd); err != nil {
+	if _, err = r.db.NamedExec(usersSegmentQuery, segments); err != nil {
 		tx.Rollback()
 		return err
 	}
@@ -87,17 +71,17 @@ func (r *UserRepo) AddSegmentWithTtl(ctx context.Context, id int, toAdd []entity
 	return tx.Commit()
 }
 
-func (r *UserRepo) DeleteSegmentFromUser(ctx context.Context, id int, toDelete []entity.SegmentToUser) error {
+func (r *UserRepo) DeleteSegmentFromUser(ctx context.Context, segments []entity.UserSegment) error {
 
 	tx, err := r.db.Begin()
 	if err != nil {
 		return err
 	}
 
-	for _, segment := range toDelete {
+	for _, segment := range segments {
 
 		usersSegmentQuery := "UPDATE user_segment SET deleted_at = now() WHERE user_id = $1 AND segment_id = $2"
-		if _, err = r.db.Exec(usersSegmentQuery, id, segment.Id); err != nil {
+		if _, err = r.db.Exec(usersSegmentQuery, segment.UserId, segment.SegmentId); err != nil {
 			tx.Rollback()
 			return err
 		}
@@ -106,7 +90,7 @@ func (r *UserRepo) DeleteSegmentFromUser(ctx context.Context, id int, toDelete [
 	return tx.Commit()
 }
 
-func (r *UserRepo) Operations(ctx context.Context, usersOperations entity.UsersOperations) ([]entity.Operation, error) {
+func (r *UserRepo) Operations(ctx context.Context, usersOperations entity.UserOperations) ([]entity.Operation, error) {
 
 	var operations []entity.Operation
 
@@ -125,15 +109,16 @@ func (r *UserRepo) Operations(ctx context.Context, usersOperations entity.UsersO
 	return operations, nil
 }
 
-func (r *UserRepo) SegmentsIdsByName(ctx context.Context, segments []entity.SegmentToUser) ([]entity.SegmentToUser, error) {
+func (r *UserRepo) SegmentsIdsByName(ctx context.Context, segments []entity.SegmentToUser) ([]int, error) {
 
 	segmentQuery := "SELECT id FROM segment WHERE name LIKE $1"
 
+	segmentIds := make([]int, len(segments))
 	for i, segment := range segments {
-		if err := r.db.Get(&segments[i].Id, segmentQuery, segment.Name); err != nil {
-			return []entity.SegmentToUser{}, err
+		if err := r.db.Get(&segmentIds[i], segmentQuery, segment.Name); err != nil {
+			return []int{}, err
 		}
 	}
 
-	return segments, nil
+	return segmentIds, nil
 }

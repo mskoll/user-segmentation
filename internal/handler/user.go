@@ -56,7 +56,7 @@ func (h *Handler) addDelSegment(ctx echo.Context) error {
 
 func (h *Handler) operations(ctx echo.Context) error {
 
-	var usersOperations entity.UsersOperations
+	var usersOperations entity.UserOperations
 	if err := ctx.Bind(&usersOperations); err != nil {
 		return ctx.String(http.StatusBadRequest, err.Error())
 	}

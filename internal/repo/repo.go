@@ -10,11 +10,10 @@ type User interface {
 	CreateUser(ctx context.Context, user entity.User) (int, error)
 	UserById(ctx context.Context, id int) (entity.User, error)
 	UsersSegments(ctx context.Context, id int) ([]entity.Segment, error)
-	AddSegment(ctx context.Context, id int, toAdd []entity.UserSegment) error
-	AddSegmentWithTtl(ctx context.Context, id int, toAdd []entity.UserSegment) error
-	DeleteSegmentFromUser(ctx context.Context, id int, toDelete []entity.SegmentToUser) error
-	Operations(ctx context.Context, usersOperations entity.UsersOperations) ([]entity.Operation, error)
-	SegmentsIdsByName(ctx context.Context, segments []entity.SegmentToUser) ([]entity.SegmentToUser, error)
+	AddSegment(ctx context.Context, segments []entity.UserSegment) error
+	DeleteSegmentFromUser(ctx context.Context, segments []entity.UserSegment) error
+	Operations(ctx context.Context, usersOperations entity.UserOperations) ([]entity.Operation, error)
+	SegmentsIdsByName(ctx context.Context, segments []entity.SegmentToUser) ([]int, error)
 }
 
 type Segment interface {
