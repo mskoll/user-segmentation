@@ -24,7 +24,7 @@ type SegmentToUser struct {
 }
 
 type UserOperations struct {
-	Id    int `json:"id"`
-	Month int `json:"month"`
-	Year  int `json:"year"`
+	UserId int `json:"user_id"`
+	Month  int `json:"month"`
+	Year   int `json:"year"`
 }

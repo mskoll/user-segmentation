@@ -47,7 +47,7 @@ func (r *UserRepo) UsersSegments(ctx context.Context, id int) ([]entity.Segment,
 
 	var segments []entity.Segment
 
-	segmentQuery := "SELECT st.id, st.name FROM segment st INNER JOIN user_segment ust ON st.id = ust.segment_id " +
+	segmentQuery := "SELECT st.id, st.name, st.percent FROM segment st INNER JOIN user_segment ust ON st.id = ust.segment_id " +
 		"WHERE ust.user_id = $1 AND (ust.deleted_at IS NULL OR ust.deleted_at > now())"
 	err := r.db.Select(&segments, segmentQuery, id)
 
@@ -94,15 +94,16 @@ func (r *UserRepo) Operations(ctx context.Context, usersOperations entity.UserOp
 
 	var operations []entity.Operation
 
-	operationsQuery := "SELECT ust.user_id, st.name segment_name, 'created' operation, ust.created_at datetime " +
+	operationsQuery := "SELECT ust.user_id user_id, st.name segment_name, 'created' operation, ust.created_at datetime " +
 		"FROM user_segment ust INNER JOIN segment st ON ust.segment_id = st.id " +
-		"WHERE ust.user_id = $1 AND DATE_PART('month', ust.created_at) = $2 AND DATE_PART('year', ust.created_at) = $3" +
-		"UNION SELECT ust.user_id, st.name segment_name, 'deleted' operation, ust.deleted_at datetime " +
+		"WHERE ust.user_id = $1 AND DATE_PART('month', ust.created_at) = $2 AND DATE_PART('year', ust.created_at) = $3 " +
+		"UNION SELECT ust.user_id user_id, st.name segment_name, 'deleted' operation, ust.deleted_at datetime " +
 		"FROM user_segment ust INNER JOIN segment st ON ust.segment_id = st.id " +
-		"WHERE ust.user_id = $1 AND ust.deleted_at < NOW() AND ust.deleted_at IS NOT NULL AND " +
-		"DATE_PART('month', ust.deleted_at) = $2 AND DATE_PART('year', ust.deleted_at) = $3"
+		"WHERE ust.user_id = $4 AND ust.deleted_at < NOW() AND ust.deleted_at IS NOT NULL AND " +
+		"DATE_PART('month', ust.deleted_at) = $5 AND DATE_PART('year', ust.deleted_at) = $6 " +
+		"ORDER BY datetime"
 
-	if err := r.db.Select(&operations, operationsQuery, usersOperations.Id, usersOperations.Month, usersOperations.Year); err != nil {
+	if err := r.db.Select(&operations, operationsQuery, usersOperations.UserId, usersOperations.Month, usersOperations.Year, usersOperations.UserId, usersOperations.Month, usersOperations.Year); err != nil {
 		return nil, err
 	}
 

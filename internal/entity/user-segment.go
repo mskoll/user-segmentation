@@ -10,8 +10,8 @@ type UserSegment struct {
 }
 
 type Operation struct {
-	UserId      int       `json:"user_id"`
-	SegmentName string    `json:"segment_name"`
+	UserId      int       `json:"user_id" db:"user_id"`
+	SegmentName string    `json:"segment_name" db:"segment_name"`
 	Operation   string    `json:"operation"`
 	Datetime    time.Time `json:"datetime"`
 }

@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	log "github.com/sirupsen/logrus"
 	"userSegmentation/internal/entity"
 	"userSegmentation/internal/repo"
 )
@@ -29,13 +30,14 @@ func (s *SegmentService) CreateSegment(ctx context.Context, segment entity.Segme
 	if err != nil {
 		return 0, err
 	}
+	log.Info(userIds)
 
 	userSegment := make([]entity.UserSegment, len(userIds))
-	for i, u := range userSegment {
-		u.UserId = userIds[i]
-		u.SegmentId = id
+	for i := range userIds {
+		userSegment[i].UserId = userIds[i]
+		userSegment[i].SegmentId = id
 	}
-
+	log.Info(userSegment)
 	err = s.repo.AddUser(ctx, userSegment)
 
 	return id, err
