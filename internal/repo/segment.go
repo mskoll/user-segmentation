@@ -33,31 +33,30 @@ func (r *SegmentRepo) CreateSegment(ctx context.Context, segment entity.Segment)
 	return segmentId, tx.Commit()
 }
 
-func (r *SegmentRepo) AddToPercentUsers(ctx context.Context, segment entity.Segment) error {
-
-	var userIds []int
-	usersQuery := "SELECT id FROM users ORDER BY random() LIMIT (SELECT count(*) FROM users)*$1/100"
-	err := r.db.Select(&userIds, usersQuery, segment.Percent)
+func (r *SegmentRepo) AddUser(ctx context.Context, userSegment []entity.UserSegment) error {
 
 	tx, err := r.db.Begin()
 	if err != nil {
 		return err
 	}
 
-	usersSegment := make([]entity.UserSegment, len(userIds))
-	for i, us := range usersSegment {
-		us.UserId = userIds[i]
-		us.SegmentId = segment.Id
-	}
+	usersSegmentQuery := "INSERT INTO user_segment (user_id, segment_id) VALUES (:user_id, :segment_id)"
 
-	usersSegmentQuery := "INSERT INTO user_segment (user_id, segment_id) VALUES (:user_id, :segment_id) ON CONFLICT DO NOTHING"
-
-	if _, err = r.db.NamedExec(usersSegmentQuery, usersSegment); err != nil {
+	if _, err = r.db.NamedExec(usersSegmentQuery, userSegment); err != nil {
 		tx.Rollback()
 		return err
 	}
 
 	return tx.Commit()
+}
+
+func (r *SegmentRepo) UserIdsList(ctx context.Context, percent int) ([]int, error) {
+
+	var userIds []int
+	userQuery := "SELECT id FROM users TABLESAMPLE BERNOULLI ($1)"
+	err := r.db.Select(&userIds, userQuery, percent)
+
+	return userIds, err
 }
 
 func (r *SegmentRepo) DeleteSegment(ctx context.Context, name string) error {

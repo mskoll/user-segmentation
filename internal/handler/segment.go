@@ -22,5 +22,14 @@ func (h *Handler) createSegment(ctx echo.Context) error {
 }
 
 func (h *Handler) deleteSegment(ctx echo.Context) error {
-	return nil
+	var segment entity.Segment
+
+	if err := ctx.Bind(&segment); err != nil {
+		return ctx.String(http.StatusBadRequest, err.Error())
+	}
+
+	if err := h.services.DeleteSegment(ctx.Request().Context(), segment.Name); err != nil {
+		return ctx.String(http.StatusBadRequest, err.Error())
+	}
+	return ctx.JSON(http.StatusOK, "OK")
 }

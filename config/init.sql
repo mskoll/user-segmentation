@@ -24,4 +24,4 @@ create table user_segment
     foreign key (segment_id) references segment (id)
 );
 
-create unique index idx_user_segment on user_segment (user_id, segment_id, created_at);
+create unique index idx_user_segment on user_segment (user_id, segment_id) where deleted_at is null;

@@ -54,27 +54,16 @@ func (r *UserRepo) UsersSegments(ctx context.Context, id int) ([]entity.Segment,
 	return segments, err
 }
 
-func (r *UserRepo) AddSegment(ctx context.Context, id int, toAdd []string) error {
-	// todo: add check if exists
-	segments := make([]entity.UserSegment, len(toAdd))
-
-	for i, segment := range toAdd {
-
-		segments[i].UserId = id
-		segmentQuery := "SELECT id FROM segment WHERE name LIKE $1"
-		if err := r.db.Get(&segments[i].SegmentId, segmentQuery, segment); err != nil {
-			return err
-		}
-	}
+func (r *UserRepo) AddSegment(ctx context.Context, id int, toAdd []entity.UserSegment) error {
 
 	tx, err := r.db.Begin()
 	if err != nil {
 		return err
 	}
 
-	usersSegmentQuery := "INSERT INTO user_segment (user_id, segment_id) VALUES (:user_id, :segment_id) ON CONFLICT DO NOTHING"
+	usersSegmentQuery := "INSERT INTO user_segment (user_id, segment_id) VALUES (:user_id, :segment_id)"
 
-	if _, err = r.db.NamedExec(usersSegmentQuery, segments); err != nil {
+	if _, err = r.db.NamedExec(usersSegmentQuery, toAdd); err != nil {
 		tx.Rollback()
 		return err
 	}
@@ -82,31 +71,69 @@ func (r *UserRepo) AddSegment(ctx context.Context, id int, toAdd []string) error
 	return tx.Commit()
 }
 
-func (r *UserRepo) DeleteSegmentFromUser(ctx context.Context, id int, toDelete []string) error {
-
-	segments := make([]int, len(toDelete))
-
-	for i, segment := range toDelete {
-
-		segmentQuery := "SELECT id FROM segment WHERE name LIKE $1"
-		if err := r.db.Get(&segments[i], segmentQuery, segment); err != nil {
-			return err
-		}
+func (r *UserRepo) AddSegmentWithTtl(ctx context.Context, id int, toAdd []entity.UserSegment) error {
+	tx, err := r.db.Begin()
+	if err != nil {
+		return err
 	}
+
+	usersSegmentQuery := "INSERT INTO user_segment (user_id, segment_id, deleted_at) VALUES (:user_id, :segment_id, :deleted_at)"
+
+	if _, err = r.db.NamedExec(usersSegmentQuery, toAdd); err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	return tx.Commit()
+}
+
+func (r *UserRepo) DeleteSegmentFromUser(ctx context.Context, id int, toDelete []entity.SegmentToUser) error {
 
 	tx, err := r.db.Begin()
 	if err != nil {
 		return err
 	}
 
-	for _, segment := range segments {
+	for _, segment := range toDelete {
 
 		usersSegmentQuery := "UPDATE user_segment SET deleted_at = now() WHERE user_id = $1 AND segment_id = $2"
-		if _, err = r.db.Exec(usersSegmentQuery, id, segment); err != nil {
+		if _, err = r.db.Exec(usersSegmentQuery, id, segment.Id); err != nil {
 			tx.Rollback()
 			return err
 		}
 	}
 
 	return tx.Commit()
+}
+
+func (r *UserRepo) Operations(ctx context.Context, usersOperations entity.UsersOperations) ([]entity.Operation, error) {
+
+	var operations []entity.Operation
+
+	operationsQuery := "SELECT ust.user_id, st.name segment_name, 'created' operation, ust.created_at datetime " +
+		"FROM user_segment ust INNER JOIN segment st ON ust.segment_id = st.id " +
+		"WHERE ust.user_id = $1 AND DATE_PART('month', ust.created_at) = $2 AND DATE_PART('year', ust.created_at) = $3" +
+		"UNION SELECT ust.user_id, st.name segment_name, 'deleted' operation, ust.deleted_at datetime " +
+		"FROM user_segment ust INNER JOIN segment st ON ust.segment_id = st.id " +
+		"WHERE ust.user_id = $1 AND ust.deleted_at < NOW() AND ust.deleted_at IS NOT NULL AND " +
+		"DATE_PART('month', ust.deleted_at) = $2 AND DATE_PART('year', ust.deleted_at) = $3"
+
+	if err := r.db.Select(&operations, operationsQuery, usersOperations.Id, usersOperations.Month, usersOperations.Year); err != nil {
+		return nil, err
+	}
+
+	return operations, nil
+}
+
+func (r *UserRepo) SegmentsIdsByName(ctx context.Context, segments []entity.SegmentToUser) ([]entity.SegmentToUser, error) {
+
+	segmentQuery := "SELECT id FROM segment WHERE name LIKE $1"
+
+	for i, segment := range segments {
+		if err := r.db.Get(&segments[i].Id, segmentQuery, segment.Name); err != nil {
+			return []entity.SegmentToUser{}, err
+		}
+	}
+
+	return segments, nil
 }

@@ -19,6 +19,7 @@ func (h *Handler) Route(e *echo.Echo) {
 	user.POST("/", h.createUser)
 	user.GET("/:id", h.userById)
 	user.POST("/segment", h.addDelSegment)
+	user.POST("/operations", h.operations)
 
 	segment := e.Group("/segment")
 	segment.POST("/", h.createSegment)

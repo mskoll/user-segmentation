@@ -53,3 +53,18 @@ func (h *Handler) addDelSegment(ctx echo.Context) error {
 
 	return ctx.JSON(http.StatusOK, "OK")
 }
+
+func (h *Handler) operations(ctx echo.Context) error {
+
+	var usersOperations entity.UsersOperations
+	if err := ctx.Bind(&usersOperations); err != nil {
+		return ctx.String(http.StatusBadRequest, err.Error())
+	}
+
+	res, err := h.services.Operations(ctx.Request().Context(), usersOperations)
+	if err != nil {
+		return ctx.String(http.StatusInternalServerError, err.Error())
+	}
+
+	return ctx.JSON(http.StatusOK, res)
+}
