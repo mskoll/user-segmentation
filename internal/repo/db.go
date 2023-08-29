@@ -23,7 +23,9 @@ type Conf struct {
 
 func Init(cfg Conf) (*sqlx.DB, error) {
 	db, err := sqlx.Open("postgres", connToString(cfg))
+
 	// db, err := sqlx.Open("postgres", os.Getenv("DATABASE_URL"))
+
 	if err != nil {
 		return nil, err
 	}

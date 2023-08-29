@@ -2,7 +2,9 @@ package repo
 
 import (
 	"context"
+	"fmt"
 	"github.com/jmoiron/sqlx"
+	"github.com/pkg/errors"
 	"userSegmentation/internal/entity"
 )
 
@@ -18,7 +20,7 @@ func (r *SegmentRepo) CreateSegment(ctx context.Context, segment entity.Segment)
 
 	tx, err := r.db.Begin()
 	if err != nil {
-		return 0, err
+		return 0, errors.Wrap(err, fmt.Sprintf("SegmentRepo.CreateSegment: %s", err.Error()))
 	}
 
 	var segmentId int
@@ -27,7 +29,7 @@ func (r *SegmentRepo) CreateSegment(ctx context.Context, segment entity.Segment)
 	row := tx.QueryRow(segmentQuery, segment.Name, segment.Percent)
 	if err = row.Scan(&segmentId); err != nil {
 		tx.Rollback()
-		return 0, err
+		return 0, errors.Wrap(err, fmt.Sprintf("SegmentRepo.CreateSegment: %s", err.Error()))
 	}
 
 	return segmentId, tx.Commit()
@@ -37,14 +39,14 @@ func (r *SegmentRepo) AddUser(ctx context.Context, userSegment []entity.UserSegm
 
 	tx, err := r.db.Begin()
 	if err != nil {
-		return err
+		return errors.Wrap(err, fmt.Sprintf("SegmentRepo.AddUser: %s", err.Error()))
 	}
 
 	usersSegmentQuery := "INSERT INTO user_segment (user_id, segment_id) VALUES (:user_id, :segment_id)"
 
 	if _, err = r.db.NamedExec(usersSegmentQuery, userSegment); err != nil {
 		tx.Rollback()
-		return err
+		return errors.Wrap(err, fmt.Sprintf("SegmentRepo.AddUser: %s", err.Error()))
 	}
 
 	return tx.Commit()
@@ -53,17 +55,20 @@ func (r *SegmentRepo) AddUser(ctx context.Context, userSegment []entity.UserSegm
 func (r *SegmentRepo) UserIdsList(ctx context.Context, percent int) ([]int, error) {
 
 	var userIds []int
-	userQuery := "SELECT id FROM users TABLESAMPLE BERNOULLI ($1)"
-	err := r.db.Select(&userIds, userQuery, percent)
 
-	return userIds, err
+	userQuery := "SELECT id FROM users TABLESAMPLE BERNOULLI ($1)"
+	if err := r.db.Select(&userIds, userQuery, percent); err != nil {
+		return nil, errors.Wrap(err, fmt.Sprintf("SegmentRepo.UserIdsList: %s", err.Error()))
+	}
+
+	return userIds, nil
 }
 
 func (r *SegmentRepo) DeleteSegment(ctx context.Context, name string) error {
 
 	tx, err := r.db.Begin()
 	if err != nil {
-		return err
+		return errors.Wrap(err, fmt.Sprintf("SegmentRepo.DeleteSegment: %s", err.Error()))
 	}
 
 	segmentQuery := "UPDATE segment SET deleted_at = NOW() WHERE name LIKE $2 RETURNING id"
@@ -72,7 +77,7 @@ func (r *SegmentRepo) DeleteSegment(ctx context.Context, name string) error {
 	var segmentId int
 	if err = row.Scan(&segmentId); err != nil {
 		tx.Rollback()
-		return err
+		return errors.Wrap(err, fmt.Sprintf("SegmentRepo.DeleteSegment: %s", err.Error()))
 	}
 
 	usersSegmentQuery := "UPDATE user_segment SET deleted_at = NOW() WHERE segment_id = $1"

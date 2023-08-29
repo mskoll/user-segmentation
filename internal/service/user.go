@@ -2,7 +2,10 @@ package service
 
 import (
 	"context"
+	"fmt"
+	"github.com/pkg/errors"
 	"userSegmentation/internal/entity"
+	"userSegmentation/internal/lib/errTypes"
 	"userSegmentation/internal/repo"
 )
 
@@ -71,8 +74,8 @@ func (s *UserService) AddDeleteSegment(ctx context.Context, segments entity.AddD
 	for _, segment := range segments.ToAdd {
 		for _, segm := range currentSegments {
 			if segment.Name == segm.Name {
-				// todo : fix err
-				return err
+				return errors.Wrap(errTypes.ErrAlreadyExists,
+					fmt.Sprintf("Segment %s already exists for user %d", segment.Name, segments.UserId))
 			}
 		}
 	}

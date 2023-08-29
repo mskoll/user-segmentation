@@ -3,28 +3,27 @@ package app
 import (
 	"context"
 	"github.com/labstack/echo/v4"
-	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
+	"go.uber.org/zap"
 	"net/http"
 	"os"
 	"os/signal"
 	"time"
 	"userSegmentation/internal/handler"
+	"userSegmentation/internal/lib/logger"
 	"userSegmentation/internal/repo"
 	"userSegmentation/internal/service"
-	"userSegmentation/pkg/logger"
 )
 
 func Run() {
-
+	log := logger.CreateLogger()
+	defer log.Sync()
 	if err := initConfig(); err != nil {
-		log.Fatalf("Config error: %s", err.Error())
+		log.Fatal("config init err", zap.String("error", err.Error()))
 	}
-	logger.Init()
 
-	// repo (pg)
+	log.Info("starting app")
 
-	log.Info("Starting app")
 	db, err := repo.Init(repo.Conf{
 		Host:     viper.GetString("db.host"),
 		Port:     viper.GetString("db.port"),
@@ -33,24 +32,22 @@ func Run() {
 		DBName:   viper.GetString("db.dbname"),
 	})
 	if err != nil {
-		log.Fatalf("DB-init error: %s", err.Error())
+		log.Fatal("database connection error", zap.String("error", err.Error()))
 	}
-	log.Info("DB connected")
-	log.Info("Initializing repositories")
-	repos := repo.New(db)
 
-	// service
+	log.Info("database connected")
+
+	repos := repo.New(db)
 	services := service.New(repos)
-	// handler
-	handlers := handler.New(services)
-	// server
+	handlers := handler.New(services, log)
+
 	e := echo.New()
 
 	handlers.Route(e)
-	s := &http.Server{Addr: ":8000"}
 
+	log.Info("server starting", zap.String("port", ":8000"))
 	go func() {
-		if err := e.StartServer(s); err != nil && err != http.ErrServerClosed {
+		if err = e.Start(":8000"); err != nil && err != http.ErrServerClosed {
 			log.Fatal("shutting down the server")
 		}
 	}()
@@ -60,9 +57,13 @@ func Run() {
 	<-quit
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
-	if err := e.Shutdown(ctx); err != nil {
-		e.Logger.Fatal(err)
+
+	log.Info("app shutting down")
+
+	if err = e.Shutdown(ctx); err != nil {
+		log.Fatal("server shutting down err", zap.String("error", err.Error()))
 	}
+
 }
 
 func initConfig() error {

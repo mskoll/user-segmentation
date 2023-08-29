@@ -2,7 +2,6 @@ package service
 
 import (
 	"context"
-	log "github.com/sirupsen/logrus"
 	"userSegmentation/internal/entity"
 	"userSegmentation/internal/repo"
 )
@@ -23,21 +22,23 @@ func (s *SegmentService) CreateSegment(ctx context.Context, segment entity.Segme
 	}
 
 	if segment.Percent == 0 {
-		return id, err
+		return id, nil
 	}
 
 	userIds, err := s.repo.UserIdsList(ctx, segment.Percent)
+	if len(userIds) == 0 {
+		return id, nil
+	}
 	if err != nil {
 		return 0, err
 	}
-	log.Info(userIds)
 
 	userSegment := make([]entity.UserSegment, len(userIds))
 	for i := range userIds {
 		userSegment[i].UserId = userIds[i]
 		userSegment[i].SegmentId = id
 	}
-	log.Info(userSegment)
+
 	err = s.repo.AddUser(ctx, userSegment)
 
 	return id, err

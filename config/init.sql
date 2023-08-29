@@ -1,13 +1,13 @@
 create table users
 (
     id       serial primary key,
-    username varchar(255) not null
+    username varchar(255) not null unique
 );
 
 create table segment
 (
     id         serial primary key,
-    name       varchar(255) not null,
+    name       varchar(255) not null unique,
     percent    int          not null default 0,
     created_at timestamp    not null default now(),
     deleted_at timestamp             default null
