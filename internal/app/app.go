@@ -3,70 +3,60 @@ package app
 import (
 	"context"
 	"github.com/labstack/echo/v4"
-	"go.uber.org/zap"
-	logd "log"
-	"net/http"
-	"os"
-	"os/signal"
-	"syscall"
-	"time"
+	"github.com/labstack/gommon/log"
+	"github.com/pkg/errors"
 	"userSegmentation/config"
+	"userSegmentation/internal/database"
 	"userSegmentation/internal/handler"
-	"userSegmentation/internal/lib/logger"
 	"userSegmentation/internal/repo"
 	"userSegmentation/internal/service"
+	"userSegmentation/internal/utils"
 )
 
-func Run() {
+type App struct {
+	db     *database.DB
+	router *echo.Echo
+	cfg    *config.Config
+}
 
-	logd.Print("config initializing")
+func New() (app *App, err error) {
 
-	cfg, err := config.New()
+	app = &App{}
+
+	utils.Logger.Info("config initializing")
+
+	app.cfg, err = config.New()
 	if err != nil {
-		logd.Fatal("reading config err", zap.String("error", err.Error()))
+		return nil, errors.Wrap(err, "reading config err")
 	}
 
-	log := logger.CreateLogger()
-	defer log.Sync()
-
-	log.Info("starting app")
-
-	db, err := repo.Init(&cfg.DB)
+	app.db, err = database.New(&app.cfg.DB)
 	if err != nil {
-		log.Fatal("database connection err", zap.String("error", err.Error()))
+		return nil, errors.Wrap(err, "database connection err")
 	}
 
 	log.Info("database connected")
 
-	repos := repo.New(db)
+	app.router = echo.New()
+
+	return app, err
+}
+
+func (app *App) Run() error {
+
+	log.Info("starting app")
+
+	repos := repo.New(app.db.DB)
 	services := service.New(repos)
-	handlers := handler.New(services, log)
+	handlers := handler.New(services)
 
-	e := echo.New()
-
-	handlers.Route(e)
+	handlers.Route(app.router)
 
 	log.Info("server starting")
-	go func() {
-		if err = e.Start(":" + cfg.HTTP.Port); err != nil && err != http.ErrServerClosed {
-			log.Fatal("shutting down the server")
-		}
-	}()
 
-	quit := make(chan os.Signal, 1)
-	signal.Notify(quit, os.Interrupt, syscall.SIGTERM)
-	<-quit
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
+	return app.router.Start(":" + app.cfg.HTTP.Port)
+}
 
-	log.Info("app shutting down")
-
-	if err = e.Shutdown(ctx); err != nil {
-		log.Error("server shutting down err", zap.String("error", err.Error()))
-	}
-
-	if err = db.Close(); err != nil {
-		log.Error("database connection close err", zap.String("error", err.Error()))
-	}
-
+func (app *App) Shutdown(ctx context.Context) error {
+	return app.router.Shutdown(ctx)
 }

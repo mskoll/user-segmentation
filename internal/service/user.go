@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"github.com/pkg/errors"
 	"userSegmentation/internal/entity"
-	"userSegmentation/internal/lib/errTypes"
 	"userSegmentation/internal/repo"
+	"userSegmentation/internal/utils"
 )
 
 type UserService struct {
@@ -73,7 +73,7 @@ func (s *UserService) AddDeleteSegment(segments entity.AddDelSegments) error {
 	for _, segment := range segments.ToAdd {
 		for _, segm := range currentSegments {
 			if segment.Name == segm.Name {
-				return errors.Wrap(errTypes.ErrAlreadyExists,
+				return errors.Wrap(utils.ErrAlreadyExists,
 					fmt.Sprintf("Segment %s already exists for user %d", segment.Name, segments.UserId))
 			}
 		}

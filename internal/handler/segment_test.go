@@ -9,10 +9,9 @@ import (
 	"net/http/httptest"
 	"testing"
 	"userSegmentation/internal/entity"
-	"userSegmentation/internal/lib/errTypes"
-	"userSegmentation/internal/lib/logger"
 	"userSegmentation/internal/service"
 	mock_service "userSegmentation/internal/service/mocks"
+	"userSegmentation/internal/utils"
 )
 
 func TestHandler_createSegment(t *testing.T) {
@@ -57,7 +56,7 @@ func TestHandler_createSegment(t *testing.T) {
 			tt.mockBehavior(repo, tt.inputSegment)
 
 			services := &service.Service{Segment: repo}
-			handler := New(services, logger.CreateLogger())
+			handler := New(services)
 
 			r := echo.New()
 			r.POST("/segment/", handler.createSegment)
@@ -113,7 +112,7 @@ func TestHandler_deleteSegment(t *testing.T) {
 				Percent: 0,
 			},
 			mockBehavior: func(r *mock_service.MockSegment, segment entity.Segment) {
-				r.EXPECT().DeleteSegment(segment.Name).Return(errors.Wrap(errTypes.ErrNotFound,
+				r.EXPECT().DeleteSegment(segment.Name).Return(errors.Wrap(utils.ErrNotFound,
 					"Segment test-segment-name not found"))
 			},
 			expectedStatusCode:   404,
@@ -130,7 +129,7 @@ func TestHandler_deleteSegment(t *testing.T) {
 			tt.mockBehavior(repo, tt.inputSegment)
 
 			services := &service.Service{Segment: repo}
-			handler := New(services, logger.CreateLogger())
+			handler := New(services)
 
 			r := echo.New()
 			r.DELETE("/segment/", handler.deleteSegment)

@@ -1,4 +1,4 @@
-package repo
+package database
 
 import (
 	"fmt"
@@ -7,7 +7,11 @@ import (
 	"userSegmentation/config"
 )
 
-func Init(cfg *config.DB) (*sqlx.DB, error) {
+type DB struct {
+	DB *sqlx.DB
+}
+
+func New(cfg *config.DB) (*DB, error) {
 
 	db, err := sqlx.Open("postgres", dbUrl(*cfg))
 
@@ -19,8 +23,8 @@ func Init(cfg *config.DB) (*sqlx.DB, error) {
 	if err != nil {
 		return nil, err
 	}
-	
-	return db, nil
+
+	return &DB{db}, nil
 }
 
 func dbUrl(cfg config.DB) string {

@@ -6,7 +6,7 @@ import (
 	"github.com/jmoiron/sqlx"
 	"github.com/pkg/errors"
 	"userSegmentation/internal/entity"
-	"userSegmentation/internal/lib/errTypes"
+	"userSegmentation/internal/utils"
 )
 
 type SegmentRepo struct {
@@ -79,7 +79,7 @@ func (r *SegmentRepo) DeleteSegment(name string) error {
 	if err = row.Scan(&segmentId); err != nil {
 		tx.Rollback()
 		if errors.Is(err, sql.ErrNoRows) {
-			return errors.Wrap(errTypes.ErrNotFound, fmt.Sprintf("Segment %s not found", name))
+			return errors.Wrap(utils.ErrNotFound, fmt.Sprintf("Segment %s not found", name))
 		}
 		return errors.Wrap(err, fmt.Sprintf("SegmentRepo.DeleteSegment: %s", err.Error()))
 	}

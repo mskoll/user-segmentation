@@ -6,7 +6,7 @@ import (
 	"github.com/jmoiron/sqlx"
 	"github.com/pkg/errors"
 	"userSegmentation/internal/entity"
-	"userSegmentation/internal/lib/errTypes"
+	"userSegmentation/internal/utils"
 )
 
 type UserRepo struct {
@@ -46,7 +46,7 @@ func (r *UserRepo) UserById(id int) (entity.User, error) {
 	if err != nil {
 
 		if errors.Is(err, sql.ErrNoRows) {
-			return entity.User{}, errors.Wrap(errTypes.ErrNotFound, fmt.Sprintf("User %v not found", id))
+			return entity.User{}, errors.Wrap(utils.ErrNotFound, fmt.Sprintf("User %v not found", id))
 		}
 
 		return entity.User{}, errors.Wrap(err, fmt.Sprintf("UserRepo.UserById: %s", err.Error()))
@@ -136,7 +136,7 @@ func (r *UserRepo) SegmentsIdsByName(segments []entity.SegmentToUser) ([]int, er
 		if err := r.db.Get(&segmentIds[i], segmentQuery, segment.Name); err != nil {
 
 			if errors.Is(err, sql.ErrNoRows) {
-				return []int{}, errors.Wrap(errTypes.ErrNotFound, fmt.Sprintf("Segment %v not found", segment.Name))
+				return []int{}, errors.Wrap(utils.ErrNotFound, fmt.Sprintf("Segment %v not found", segment.Name))
 			}
 
 			return []int{}, errors.Wrap(err, fmt.Sprintf("UserRepo.SegmentsIdsByName: %s", err.Error()))

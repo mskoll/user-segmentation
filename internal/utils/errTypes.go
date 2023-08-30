@@ -1,4 +1,4 @@
-package errTypes
+package utils
 
 import (
 	"github.com/pkg/errors"

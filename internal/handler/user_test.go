@@ -9,7 +9,6 @@ import (
 	"testing"
 	"time"
 	"userSegmentation/internal/entity"
-	"userSegmentation/internal/lib/logger"
 	"userSegmentation/internal/service"
 	mock_service "userSegmentation/internal/service/mocks"
 )
@@ -54,7 +53,7 @@ func TestHandler_createUser(t *testing.T) {
 			tt.mockBehavior(repo, tt.inputUser)
 
 			services := &service.Service{User: repo}
-			handler := New(services, logger.CreateLogger())
+			handler := New(services)
 
 			r := echo.New()
 			r.POST("/user/", handler.createUser)
@@ -123,7 +122,7 @@ func TestHandler_operations(t *testing.T) {
 			tt.mockBehavior(repo, tt.inputUser)
 
 			services := &service.Service{User: repo}
-			handler := New(services, logger.CreateLogger())
+			handler := New(services)
 
 			r := echo.New()
 			r.POST("/user/operations", handler.operations)

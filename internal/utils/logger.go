@@ -1,11 +1,13 @@
-package logger
+package utils
 
 import (
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 )
 
-func CreateLogger() *zap.Logger {
+var Logger *zap.Logger
+
+func CreateLogger() {
 
 	cfg := zap.Config{
 		Level:    zap.NewAtomicLevelAt(zap.DebugLevel),
@@ -23,5 +25,5 @@ func CreateLogger() *zap.Logger {
 		ErrorOutputPaths: []string{"stderr"},
 	}
 
-	return zap.Must(cfg.Build())
+	Logger = zap.Must(cfg.Build())
 }
