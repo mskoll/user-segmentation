@@ -1,8 +1,0 @@
-port: "8000"
-
-db:
-  user: "admin"
-  password: "admin"
-  host: "postgres"
-  port: "5432"
-  dbname: "segmdb"

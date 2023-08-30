@@ -4,39 +4,26 @@ import (
 	"fmt"
 	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq"
+	"userSegmentation/config"
 )
 
-const (
-	userTable        = "users"
-	segmentTable     = "segment"
-	userSegmentTable = "user_segment"
-	operationTable   = "operation"
-)
+func Init(cfg *config.DB) (*sqlx.DB, error) {
 
-type Conf struct {
-	Host     string
-	Port     string
-	User     string
-	Password string
-	DBName   string
-}
-
-func Init(cfg Conf) (*sqlx.DB, error) {
-	db, err := sqlx.Open("postgres", connToString(cfg))
-
-	// db, err := sqlx.Open("postgres", os.Getenv("DATABASE_URL"))
+	db, err := sqlx.Open("postgres", dbUrl(*cfg))
 
 	if err != nil {
 		return nil, err
 	}
+
 	err = db.Ping()
 	if err != nil {
 		return nil, err
 	}
+	
 	return db, nil
 }
 
-func connToString(info Conf) string {
+func dbUrl(cfg config.DB) string {
 	return fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable",
-		info.Host, info.Port, info.User, info.Password, info.DBName)
+		cfg.Host, cfg.Port, cfg.User, cfg.Password, cfg.Name)
 }

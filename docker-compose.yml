@@ -4,8 +4,6 @@ services:
   app:
     container_name: app
     build: .
-    environment:
-      DATABASE_URL: "host=postgres user=admin password=admin dbname=segmdb sslmode=disable"
     env_file:
       - .env
     ports:

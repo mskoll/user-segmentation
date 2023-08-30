@@ -2,10 +2,12 @@ package repo
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
 	"github.com/jmoiron/sqlx"
 	"github.com/pkg/errors"
 	"userSegmentation/internal/entity"
+	"userSegmentation/internal/lib/errTypes"
 )
 
 type SegmentRepo struct {
@@ -71,16 +73,20 @@ func (r *SegmentRepo) DeleteSegment(ctx context.Context, name string) error {
 		return errors.Wrap(err, fmt.Sprintf("SegmentRepo.DeleteSegment: %s", err.Error()))
 	}
 
-	segmentQuery := "UPDATE segment SET deleted_at = NOW() WHERE name LIKE $2 RETURNING id"
+	segmentQuery := "UPDATE segment SET deleted_at = NOW() WHERE name LIKE $1 AND deleted_at IS NULL RETURNING id"
 	row := tx.QueryRow(segmentQuery, name)
 
 	var segmentId int
 	if err = row.Scan(&segmentId); err != nil {
 		tx.Rollback()
+		if errors.Is(err, sql.ErrNoRows) {
+			return errors.Wrap(errTypes.ErrNotFound, fmt.Sprintf("Segment %s not found", name))
+		}
 		return errors.Wrap(err, fmt.Sprintf("SegmentRepo.DeleteSegment: %s", err.Error()))
 	}
 
-	usersSegmentQuery := "UPDATE user_segment SET deleted_at = NOW() WHERE segment_id = $1"
+	usersSegmentQuery := "UPDATE user_segment SET deleted_at = NOW() WHERE segment_id = $1 AND " +
+		"(deleted_at IS NULL OR deleted_at > now())"
 	row = tx.QueryRow(usersSegmentQuery, segmentId)
 
 	return tx.Commit()
