@@ -1,7 +1,6 @@
 package repo
 
 import (
-	"context"
 	"database/sql"
 	"fmt"
 	"github.com/jmoiron/sqlx"
@@ -18,7 +17,7 @@ func NewUser(db *sqlx.DB) *UserRepo {
 	return &UserRepo{db: db}
 }
 
-func (r *UserRepo) CreateUser(ctx context.Context, user entity.User) (int, error) {
+func (r *UserRepo) CreateUser(user entity.User) (int, error) {
 
 	tx, err := r.db.Begin()
 	if err != nil {
@@ -37,7 +36,7 @@ func (r *UserRepo) CreateUser(ctx context.Context, user entity.User) (int, error
 	return userId, tx.Commit()
 }
 
-func (r *UserRepo) UserById(ctx context.Context, id int) (entity.User, error) {
+func (r *UserRepo) UserById(id int) (entity.User, error) {
 
 	var user entity.User
 
@@ -56,7 +55,7 @@ func (r *UserRepo) UserById(ctx context.Context, id int) (entity.User, error) {
 	return user, nil
 }
 
-func (r *UserRepo) UsersSegments(ctx context.Context, id int) ([]entity.Segment, error) {
+func (r *UserRepo) UsersSegments(id int) ([]entity.Segment, error) {
 
 	var segments []entity.Segment
 
@@ -71,7 +70,7 @@ func (r *UserRepo) UsersSegments(ctx context.Context, id int) ([]entity.Segment,
 	return segments, nil
 }
 
-func (r *UserRepo) AddSegment(ctx context.Context, segments []entity.UserSegment) error {
+func (r *UserRepo) AddSegment(segments []entity.UserSegment) error {
 
 	tx, err := r.db.Begin()
 	if err != nil {
@@ -88,7 +87,7 @@ func (r *UserRepo) AddSegment(ctx context.Context, segments []entity.UserSegment
 	return tx.Commit()
 }
 
-func (r *UserRepo) DeleteSegmentFromUser(ctx context.Context, segments []entity.UserSegment) error {
+func (r *UserRepo) DeleteSegmentFromUser(segments []entity.UserSegment) error {
 
 	tx, err := r.db.Begin()
 	if err != nil {
@@ -107,7 +106,7 @@ func (r *UserRepo) DeleteSegmentFromUser(ctx context.Context, segments []entity.
 	return tx.Commit()
 }
 
-func (r *UserRepo) Operations(ctx context.Context, usersOperations entity.UserOperations) ([]entity.Operation, error) {
+func (r *UserRepo) Operations(usersOperations entity.UserOperations) ([]entity.Operation, error) {
 
 	var operations []entity.Operation
 
@@ -122,14 +121,13 @@ func (r *UserRepo) Operations(ctx context.Context, usersOperations entity.UserOp
 
 	if err := r.db.Select(&operations, operationsQuery, usersOperations.UserId, usersOperations.Month, usersOperations.Year,
 		usersOperations.UserId, usersOperations.Month, usersOperations.Year); err != nil {
-
 		return nil, errors.Wrap(err, fmt.Sprintf("UserRepo.Operations: %s", err.Error()))
 	}
 
 	return operations, nil
 }
 
-func (r *UserRepo) SegmentsIdsByName(ctx context.Context, segments []entity.SegmentToUser) ([]int, error) {
+func (r *UserRepo) SegmentsIdsByName(segments []entity.SegmentToUser) ([]int, error) {
 
 	segmentQuery := "SELECT id FROM segment WHERE name LIKE $1"
 

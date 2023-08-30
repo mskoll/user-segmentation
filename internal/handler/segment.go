@@ -16,12 +16,12 @@ func (h *Handler) createSegment(ctx echo.Context) error {
 
 		h.log.Error("incorrect segment data", zap.String("error", err.Error()))
 
-		return responseErr(errors.Wrap(errTypes.ErrBadRequest, "bad request"))
+		return responseErr(errors.Wrap(errTypes.ErrBadRequest, "incorrect segment data"))
 	}
 
 	h.log.Debug("got segment to create", zap.Any("segment", segment))
 
-	id, err := h.services.CreateSegment(ctx.Request().Context(), segment)
+	id, err := h.services.CreateSegment(segment)
 	if err != nil {
 
 		h.log.Error("segment creation error", zap.String("error", err.Error()))
@@ -47,12 +47,12 @@ func (h *Handler) deleteSegment(ctx echo.Context) error {
 
 		h.log.Error("incorrect segment data", zap.String("error", err.Error()))
 
-		return responseErr(errors.Wrap(errTypes.ErrBadRequest, "bad request"))
+		return responseErr(errors.Wrap(errTypes.ErrBadRequest, "incorrect segment data"))
 	}
 
 	h.log.Debug("got segment to delete", zap.String("name", segment.Name))
 
-	if err := h.services.DeleteSegment(ctx.Request().Context(), segment.Name); err != nil {
+	if err := h.services.DeleteSegment(segment.Name); err != nil {
 
 		h.log.Error("segment deletion error", zap.String("error", err.Error()))
 

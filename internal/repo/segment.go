@@ -1,7 +1,6 @@
 package repo
 
 import (
-	"context"
 	"database/sql"
 	"fmt"
 	"github.com/jmoiron/sqlx"
@@ -18,7 +17,7 @@ func NewSegment(db *sqlx.DB) *SegmentRepo {
 	return &SegmentRepo{db: db}
 }
 
-func (r *SegmentRepo) CreateSegment(ctx context.Context, segment entity.Segment) (int, error) {
+func (r *SegmentRepo) CreateSegment(segment entity.Segment) (int, error) {
 
 	tx, err := r.db.Begin()
 	if err != nil {
@@ -37,7 +36,7 @@ func (r *SegmentRepo) CreateSegment(ctx context.Context, segment entity.Segment)
 	return segmentId, tx.Commit()
 }
 
-func (r *SegmentRepo) AddUser(ctx context.Context, userSegment []entity.UserSegment) error {
+func (r *SegmentRepo) AddUser(userSegment []entity.UserSegment) error {
 
 	tx, err := r.db.Begin()
 	if err != nil {
@@ -54,7 +53,7 @@ func (r *SegmentRepo) AddUser(ctx context.Context, userSegment []entity.UserSegm
 	return tx.Commit()
 }
 
-func (r *SegmentRepo) UserIdsList(ctx context.Context, percent int) ([]int, error) {
+func (r *SegmentRepo) UserIdsList(percent int) ([]int, error) {
 
 	var userIds []int
 
@@ -66,7 +65,7 @@ func (r *SegmentRepo) UserIdsList(ctx context.Context, percent int) ([]int, erro
 	return userIds, nil
 }
 
-func (r *SegmentRepo) DeleteSegment(ctx context.Context, name string) error {
+func (r *SegmentRepo) DeleteSegment(name string) error {
 
 	tx, err := r.db.Begin()
 	if err != nil {

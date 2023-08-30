@@ -18,12 +18,12 @@ func (h *Handler) createUser(ctx echo.Context) error {
 
 		h.log.Error("incorrect user data", zap.String("error", err.Error()))
 
-		return responseErr(errors.Wrap(errTypes.ErrBadRequest, "bad request"))
+		return responseErr(errors.Wrap(errTypes.ErrBadRequest, "incorrect user data"))
 	}
 
 	h.log.Debug("got user to create", zap.String("username", user.Username))
 
-	id, err := h.services.CreateUser(ctx.Request().Context(), user)
+	id, err := h.services.CreateUser(user)
 	if err != nil {
 
 		h.log.Error("user creation error", zap.String("error", err.Error()))
@@ -53,7 +53,7 @@ func (h *Handler) userById(ctx echo.Context) error {
 
 	h.log.Debug("got user id to select", zap.Int("id", id))
 
-	user, err := h.services.UserById(ctx.Request().Context(), id)
+	user, err := h.services.UserById(id)
 	if err != nil {
 
 		h.log.Error("user selection error", zap.String("error", err.Error()))
@@ -80,7 +80,7 @@ func (h *Handler) addDelSegment(ctx echo.Context) error {
 
 	h.log.Debug("got data to update user segments", zap.Any("data", segments))
 
-	err := h.services.AddDeleteSegment(ctx.Request().Context(), segments)
+	err := h.services.AddDeleteSegment(segments)
 	if err != nil {
 
 		h.log.Error("update user segments error", zap.String("error", err.Error()))
@@ -103,14 +103,14 @@ func (h *Handler) operations(ctx echo.Context) error {
 
 	if err := ctx.Bind(&userOperations); err != nil {
 
-		h.log.Error("incorrect user data", zap.String("error", err.Error()))
+		h.log.Error("incorrect input data", zap.String("error", err.Error()))
 
-		return responseErr(errors.Wrap(errTypes.ErrBadRequest, "bad request"))
+		return responseErr(errors.Wrap(errTypes.ErrBadRequest, "incorrect input data"))
 	}
 
 	h.log.Debug("got data to receive a report", zap.Any("data", userOperations))
 
-	res, err := h.services.Operations(ctx.Request().Context(), userOperations)
+	res, err := h.services.Operations(userOperations)
 	if err != nil {
 
 		h.log.Error("operation report generation error", zap.String("error", err.Error()))
