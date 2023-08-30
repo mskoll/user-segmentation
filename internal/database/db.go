@@ -28,6 +28,7 @@ func New(cfg *config.DB) (*DB, error) {
 }
 
 func dbUrl(cfg config.DB) string {
+
 	return fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable",
 		cfg.Host, cfg.Port, cfg.User, cfg.Password, cfg.Name)
 }

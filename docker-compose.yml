@@ -12,8 +12,8 @@ services:
       - .:/src/app
     command: go run cmd/main.go
     depends_on:
-      - postgres
-
+      postgres:
+        condition: service_healthy
 
   postgres:
     container_name: postgres
@@ -22,6 +22,12 @@ services:
       - POSTGRES_USER=${DB_USER}
       - POSTGRES_PASSWORD=${DB_PASSWORD}
       - POSTGRES_DB=${DB_NAME}
+    healthcheck:
+      test: [ 'CMD-SHELL', 'psql -h localhost -U $${POSTGRES_USER} -c select 1 -d $${POSTGRES_DB}' ]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+      start_period: 5s
     volumes:
       - ./sql/init.sql:/docker-entrypoint-initdb.d/10-init.sql
       - postgres-db:/var/lib/postgresql/data

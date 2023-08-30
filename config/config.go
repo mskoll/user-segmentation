@@ -23,10 +23,13 @@ type Config struct {
 }
 
 func New() (*Config, error) {
+
 	var cfg Config
+
 	err := cleanenv.ReadEnv(&cfg)
 	if err != nil {
 		return nil, errors.Wrap(err, "reading config error")
 	}
+
 	return &cfg, nil
 }

@@ -17,7 +17,6 @@ import (
 
 // @host 		localhost:8000
 // @BasePath	/
-
 func main() {
 
 	utils.CreateLogger()

@@ -6,6 +6,8 @@ COPY . .
 RUN go mod tidy
 RUN go build -o app ./cmd/main.go
 
+EXPOSE 8000
+
 CMD ["./app"]
 
 

@@ -16,13 +16,13 @@ type ResponseId struct {
 }
 
 func responseOk(ctx echo.Context, data interface{}) error {
+
 	return ctx.JSON(http.StatusOK, data)
 }
 
 func responseErr(err error) *echo.HTTPError {
 
 	switch errors.Cause(err) {
-
 	case utils.ErrNotFound:
 		return echo.NewHTTPError(http.StatusNotFound, err)
 	case utils.ErrAlreadyExists:

@@ -56,5 +56,6 @@ func (app *App) Run() error {
 }
 
 func (app *App) Shutdown(ctx context.Context) error {
+
 	return app.router.Shutdown(ctx)
 }
