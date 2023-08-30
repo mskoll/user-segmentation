@@ -14,18 +14,12 @@ type DB struct {
 	Host     string `env:"DB_HOST" env-default:"postgres"`
 	Port     string `env:"DB_PORT" env-default:"5432"`
 	User     string `env:"DB_USER" env-default:"postgres"`
-	Password string `env:"DB_PASSWORD" env-default:"1234"`
-	//Url      string `env:"DB_URL" env-default:"Info"`
-}
-
-type Log struct {
-	Level string `env:"LOG_LEVEL" env-default:""`
+	Password string `env:"DB_PASSWORD" env-default:"postgres"`
 }
 
 type Config struct {
 	HTTP
 	DB
-	Log
 }
 
 func New() (*Config, error) {

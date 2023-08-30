@@ -10,7 +10,7 @@ var Logger *zap.Logger
 func CreateLogger() {
 
 	cfg := zap.Config{
-		Level:    zap.NewAtomicLevelAt(zap.DebugLevel),
+		Level:    zap.NewAtomicLevelAt(zap.InfoLevel),
 		Encoding: "json",
 		EncoderConfig: zapcore.EncoderConfig{
 			MessageKey:   "message",
