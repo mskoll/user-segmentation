@@ -1,6 +1,7 @@
 package service
 
 import (
+	"context"
 	"userSegmentation/internal/entity"
 	"userSegmentation/internal/repo"
 )
@@ -13,9 +14,9 @@ func NewSegmentService(repo repo.Segment) *SegmentService {
 	return &SegmentService{repo: repo}
 }
 
-func (s *SegmentService) CreateSegment(segment entity.Segment) (int, error) {
+func (s *SegmentService) CreateSegment(ctx context.Context, segment entity.Segment) (int, error) {
 
-	id, err := s.repo.CreateSegment(segment)
+	id, err := s.repo.CreateSegment(ctx, segment)
 	if err != nil {
 		return 0, err
 	}
@@ -24,7 +25,7 @@ func (s *SegmentService) CreateSegment(segment entity.Segment) (int, error) {
 		return id, nil
 	}
 
-	userIds, err := s.repo.UserIdsList(segment.Percent)
+	userIds, err := s.repo.UserIdsList(ctx, segment.Percent)
 	if len(userIds) == 0 {
 		return id, nil
 	}
@@ -38,12 +39,12 @@ func (s *SegmentService) CreateSegment(segment entity.Segment) (int, error) {
 		userSegment[i].SegmentId = id
 	}
 
-	err = s.repo.AddUser(userSegment)
+	err = s.repo.AddUser(ctx, userSegment)
 
 	return id, err
 }
 
-func (s *SegmentService) DeleteSegment(name string) error {
-	err := s.repo.DeleteSegment(name)
+func (s *SegmentService) DeleteSegment(ctx context.Context, name string) error {
+	err := s.repo.DeleteSegment(ctx, name)
 	return err
 }

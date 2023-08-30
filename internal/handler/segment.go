@@ -8,6 +8,16 @@ import (
 	"userSegmentation/internal/utils"
 )
 
+// @Summary 	create segment
+// @Tags 		segment
+// @Description	create segment
+// @Accept 		json
+// @Produce 	json
+// @Param 		segment body entity.Segment true "segment"
+// @Success 	200 {object} ResponseId
+// @Failure 	400 {object} echo.HTTPError
+// @Failure 	500 {object} echo.HTTPError
+// @Router 		/segment/ [post]
 func (h *Handler) createSegment(ctx echo.Context) error {
 	var segment entity.Segment
 
@@ -20,7 +30,7 @@ func (h *Handler) createSegment(ctx echo.Context) error {
 
 	utils.Logger.Debug("got segment to create", zap.Any("segment", segment))
 
-	id, err := h.services.CreateSegment(segment)
+	id, err := h.services.CreateSegment(ctx.Request().Context(), segment)
 	if err != nil {
 
 		utils.Logger.Error("segment creation error", zap.String("error", err.Error()))
@@ -34,6 +44,16 @@ func (h *Handler) createSegment(ctx echo.Context) error {
 	return responseOk(ctx, ResponseId{Id: id})
 }
 
+// @Summary 	delete segment
+// @Tags 		segment
+// @Description	create segment
+// @Accept 		json
+// @Produce 	json
+// @Param 		segment body entity.Segment true "segment"
+// @Success 	200 {object} ResponseMessage
+// @Failure 	400 {object} echo.HTTPError
+// @Failure 	500 {object} echo.HTTPError
+// @Router 		/segment/ [delete]
 func (h *Handler) deleteSegment(ctx echo.Context) error {
 
 	var segment entity.Segment
@@ -47,7 +67,7 @@ func (h *Handler) deleteSegment(ctx echo.Context) error {
 
 	utils.Logger.Debug("got segment to delete", zap.String("name", segment.Name))
 
-	if err := h.services.DeleteSegment(segment.Name); err != nil {
+	if err := h.services.DeleteSegment(ctx.Request().Context(), segment.Name); err != nil {
 
 		utils.Logger.Error("segment deletion error", zap.String("error", err.Error()))
 

@@ -39,18 +39,16 @@ func New() (app *App, err error) {
 
 	app.router = echo.New()
 
-	return app, err
-}
-
-func (app *App) Run() error {
-
-	log.Info("starting app")
-
 	repos := repo.New(app.db.DB)
 	services := service.New(repos)
 	handlers := handler.New(services)
 
 	handlers.Route(app.router)
+
+	return app, err
+}
+
+func (app *App) Run() error {
 
 	log.Info("server starting")
 

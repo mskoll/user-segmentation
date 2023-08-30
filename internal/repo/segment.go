@@ -1,6 +1,7 @@
 package repo
 
 import (
+	"context"
 	"database/sql"
 	"fmt"
 	"github.com/jmoiron/sqlx"
@@ -17,7 +18,7 @@ func NewSegment(db *sqlx.DB) *SegmentRepo {
 	return &SegmentRepo{db: db}
 }
 
-func (r *SegmentRepo) CreateSegment(segment entity.Segment) (int, error) {
+func (r *SegmentRepo) CreateSegment(ctx context.Context, segment entity.Segment) (int, error) {
 
 	tx, err := r.db.Begin()
 	if err != nil {
@@ -27,7 +28,7 @@ func (r *SegmentRepo) CreateSegment(segment entity.Segment) (int, error) {
 	var segmentId int
 	segmentQuery := "INSERT INTO segment (name, percent) VALUES ($1, $2) RETURNING id"
 
-	row := tx.QueryRow(segmentQuery, segment.Name, segment.Percent)
+	row := tx.QueryRowContext(ctx, segmentQuery, segment.Name, segment.Percent)
 	if err = row.Scan(&segmentId); err != nil {
 		tx.Rollback()
 		return 0, errors.Wrap(err, fmt.Sprintf("SegmentRepo.CreateSegment: %s", err.Error()))
@@ -36,7 +37,7 @@ func (r *SegmentRepo) CreateSegment(segment entity.Segment) (int, error) {
 	return segmentId, tx.Commit()
 }
 
-func (r *SegmentRepo) AddUser(userSegment []entity.UserSegment) error {
+func (r *SegmentRepo) AddUser(ctx context.Context, userSegment []entity.UserSegment) error {
 
 	tx, err := r.db.Begin()
 	if err != nil {
@@ -45,7 +46,7 @@ func (r *SegmentRepo) AddUser(userSegment []entity.UserSegment) error {
 
 	usersSegmentQuery := "INSERT INTO user_segment (user_id, segment_id) VALUES (:user_id, :segment_id)"
 
-	if _, err = r.db.NamedExec(usersSegmentQuery, userSegment); err != nil {
+	if _, err = r.db.NamedExecContext(ctx, usersSegmentQuery, userSegment); err != nil {
 		tx.Rollback()
 		return errors.Wrap(err, fmt.Sprintf("SegmentRepo.AddUser: %s", err.Error()))
 	}
@@ -53,19 +54,19 @@ func (r *SegmentRepo) AddUser(userSegment []entity.UserSegment) error {
 	return tx.Commit()
 }
 
-func (r *SegmentRepo) UserIdsList(percent int) ([]int, error) {
+func (r *SegmentRepo) UserIdsList(ctx context.Context, percent int) ([]int, error) {
 
 	var userIds []int
 
 	userQuery := "SELECT id FROM users TABLESAMPLE BERNOULLI ($1)"
-	if err := r.db.Select(&userIds, userQuery, percent); err != nil {
+	if err := r.db.SelectContext(ctx, &userIds, userQuery, percent); err != nil {
 		return nil, errors.Wrap(err, fmt.Sprintf("SegmentRepo.UserIdsList: %s", err.Error()))
 	}
 
 	return userIds, nil
 }
 
-func (r *SegmentRepo) DeleteSegment(name string) error {
+func (r *SegmentRepo) DeleteSegment(ctx context.Context, name string) error {
 
 	tx, err := r.db.Begin()
 	if err != nil {
@@ -73,7 +74,7 @@ func (r *SegmentRepo) DeleteSegment(name string) error {
 	}
 
 	segmentQuery := "UPDATE segment SET deleted_at = NOW() WHERE name LIKE $1 AND deleted_at IS NULL RETURNING id"
-	row := tx.QueryRow(segmentQuery, name)
+	row := tx.QueryRowContext(ctx, segmentQuery, name)
 
 	var segmentId int
 	if err = row.Scan(&segmentId); err != nil {
@@ -86,7 +87,7 @@ func (r *SegmentRepo) DeleteSegment(name string) error {
 
 	usersSegmentQuery := "UPDATE user_segment SET deleted_at = NOW() WHERE segment_id = $1 AND " +
 		"(deleted_at IS NULL OR deleted_at > now())"
-	row = tx.QueryRow(usersSegmentQuery, segmentId)
+	row = tx.QueryRowContext(ctx, usersSegmentQuery, segmentId)
 
 	return tx.Commit()
 }

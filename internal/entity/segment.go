@@ -1,7 +1,7 @@
 package entity
 
 type Segment struct {
-	Id      int    `json:"id"`
+	Id      int    `json:"id,omitempty"`
 	Name    string `json:"name" validate:"required"`
-	Percent int    `json:"percent"`
+	Percent int    `json:"percent,omitempty"`
 }

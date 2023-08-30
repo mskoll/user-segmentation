@@ -2,6 +2,7 @@ package handler
 
 import (
 	"bytes"
+	"context"
 	"github.com/golang/mock/gomock"
 	"github.com/labstack/echo/v4"
 	"github.com/pkg/errors"
@@ -16,7 +17,7 @@ import (
 
 func TestHandler_createSegment(t *testing.T) {
 
-	type mockBehavior func(r *mock_service.MockSegment, segment entity.Segment)
+	type mockBehavior func(r *mock_service.MockSegment, ctx context.Context, segment entity.Segment)
 	tests := []struct {
 		name                 string
 		inputBody            string
@@ -32,8 +33,8 @@ func TestHandler_createSegment(t *testing.T) {
 				Name:    "test-segment-name",
 				Percent: 0,
 			},
-			mockBehavior: func(r *mock_service.MockSegment, segment entity.Segment) {
-				r.EXPECT().CreateSegment(segment).Return(1, nil)
+			mockBehavior: func(r *mock_service.MockSegment, ctx context.Context, segment entity.Segment) {
+				r.EXPECT().CreateSegment(ctx, segment).Return(1, nil)
 			},
 			expectedStatusCode:   200,
 			expectedResponseBody: `{"id":1}` + "\n",
@@ -41,19 +42,19 @@ func TestHandler_createSegment(t *testing.T) {
 		{
 			name:                 "incorrect segment data",
 			inputBody:            `fdnjvl349h`,
-			mockBehavior:         func(r *mock_service.MockSegment, segment entity.Segment) {},
+			mockBehavior:         func(r *mock_service.MockSegment, ctx context.Context, segment entity.Segment) {},
 			expectedStatusCode:   400,
 			expectedResponseBody: `{"message":"incorrect segment data: bad request"}` + "\n",
 		},
 	}
-
+	utils.CreateLogger()
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			c := gomock.NewController(t)
 			defer c.Finish()
 
 			repo := mock_service.NewMockSegment(c)
-			tt.mockBehavior(repo, tt.inputSegment)
+			tt.mockBehavior(repo, context.Background(), tt.inputSegment)
 
 			services := &service.Service{Segment: repo}
 			handler := New(services)
@@ -75,7 +76,7 @@ func TestHandler_createSegment(t *testing.T) {
 }
 
 func TestHandler_deleteSegment(t *testing.T) {
-	type mockBehavior func(r *mock_service.MockSegment, segment entity.Segment)
+	type mockBehavior func(r *mock_service.MockSegment, ctx context.Context, segment entity.Segment)
 	tests := []struct {
 		name                 string
 		inputBody            string
@@ -91,8 +92,8 @@ func TestHandler_deleteSegment(t *testing.T) {
 				Name:    "test-segment-name",
 				Percent: 0,
 			},
-			mockBehavior: func(r *mock_service.MockSegment, segment entity.Segment) {
-				r.EXPECT().DeleteSegment(segment.Name).Return(nil)
+			mockBehavior: func(r *mock_service.MockSegment, ctx context.Context, segment entity.Segment) {
+				r.EXPECT().DeleteSegment(ctx, segment.Name).Return(nil)
 			},
 			expectedStatusCode:   200,
 			expectedResponseBody: `{"message":"success"}` + "\n",
@@ -100,7 +101,7 @@ func TestHandler_deleteSegment(t *testing.T) {
 		{
 			name:                 "incorrect segment data",
 			inputBody:            `fdnjvl349h`,
-			mockBehavior:         func(r *mock_service.MockSegment, segment entity.Segment) {},
+			mockBehavior:         func(r *mock_service.MockSegment, ctx context.Context, segment entity.Segment) {},
 			expectedStatusCode:   400,
 			expectedResponseBody: `{"message":"incorrect segment data: bad request"}` + "\n",
 		},
@@ -111,22 +112,22 @@ func TestHandler_deleteSegment(t *testing.T) {
 				Name:    "test-segment-name",
 				Percent: 0,
 			},
-			mockBehavior: func(r *mock_service.MockSegment, segment entity.Segment) {
-				r.EXPECT().DeleteSegment(segment.Name).Return(errors.Wrap(utils.ErrNotFound,
+			mockBehavior: func(r *mock_service.MockSegment, ctx context.Context, segment entity.Segment) {
+				r.EXPECT().DeleteSegment(ctx, segment.Name).Return(errors.Wrap(utils.ErrNotFound,
 					"Segment test-segment-name not found"))
 			},
 			expectedStatusCode:   404,
 			expectedResponseBody: `{"message":"Segment test-segment-name not found: not found"}` + "\n",
 		},
 	}
-
+	utils.CreateLogger()
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			c := gomock.NewController(t)
 			defer c.Finish()
 
 			repo := mock_service.NewMockSegment(c)
-			tt.mockBehavior(repo, tt.inputSegment)
+			tt.mockBehavior(repo, context.Background(), tt.inputSegment)
 
 			services := &service.Service{Segment: repo}
 			handler := New(services)

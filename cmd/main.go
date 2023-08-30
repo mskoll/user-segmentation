@@ -12,6 +12,12 @@ import (
 	"userSegmentation/internal/utils"
 )
 
+// @title 		User Segmentation Service
+// @version		1.0
+
+// @host 		localhost:8000
+// @BasePath	/
+
 func main() {
 
 	utils.CreateLogger()

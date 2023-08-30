@@ -5,6 +5,7 @@
 package mock_service
 
 import (
+	context "context"
 	reflect "reflect"
 	entity "userSegmentation/internal/entity"
 
@@ -35,62 +36,62 @@ func (m *MockUser) EXPECT() *MockUserMockRecorder {
 }
 
 // AddDeleteSegment mocks base method.
-func (m *MockUser) AddDeleteSegment(segments entity.AddDelSegments) error {
+func (m *MockUser) AddDeleteSegment(ctx context.Context, segments entity.AddDelSegments) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "AddDeleteSegment", segments)
+	ret := m.ctrl.Call(m, "AddDeleteSegment", ctx, segments)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // AddDeleteSegment indicates an expected call of AddDeleteSegment.
-func (mr *MockUserMockRecorder) AddDeleteSegment(segments interface{}) *gomock.Call {
+func (mr *MockUserMockRecorder) AddDeleteSegment(ctx, segments interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddDeleteSegment", reflect.TypeOf((*MockUser)(nil).AddDeleteSegment), segments)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddDeleteSegment", reflect.TypeOf((*MockUser)(nil).AddDeleteSegment), ctx, segments)
 }
 
 // CreateUser mocks base method.
-func (m *MockUser) CreateUser(user entity.User) (int, error) {
+func (m *MockUser) CreateUser(ctx context.Context, user entity.User) (int, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "CreateUser", user)
+	ret := m.ctrl.Call(m, "CreateUser", ctx, user)
 	ret0, _ := ret[0].(int)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // CreateUser indicates an expected call of CreateUser.
-func (mr *MockUserMockRecorder) CreateUser(user interface{}) *gomock.Call {
+func (mr *MockUserMockRecorder) CreateUser(ctx, user interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateUser", reflect.TypeOf((*MockUser)(nil).CreateUser), user)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateUser", reflect.TypeOf((*MockUser)(nil).CreateUser), ctx, user)
 }
 
 // Operations mocks base method.
-func (m *MockUser) Operations(userOperations entity.UserOperations) ([]entity.Operation, error) {
+func (m *MockUser) Operations(ctx context.Context, userOperations entity.UserOperations) ([]entity.Operation, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Operations", userOperations)
+	ret := m.ctrl.Call(m, "Operations", ctx, userOperations)
 	ret0, _ := ret[0].([]entity.Operation)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // Operations indicates an expected call of Operations.
-func (mr *MockUserMockRecorder) Operations(userOperations interface{}) *gomock.Call {
+func (mr *MockUserMockRecorder) Operations(ctx, userOperations interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Operations", reflect.TypeOf((*MockUser)(nil).Operations), userOperations)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Operations", reflect.TypeOf((*MockUser)(nil).Operations), ctx, userOperations)
 }
 
 // UserById mocks base method.
-func (m *MockUser) UserById(id int) (entity.SegmentList, error) {
+func (m *MockUser) UserById(ctx context.Context, id int) (entity.SegmentList, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "UserById", id)
+	ret := m.ctrl.Call(m, "UserById", ctx, id)
 	ret0, _ := ret[0].(entity.SegmentList)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // UserById indicates an expected call of UserById.
-func (mr *MockUserMockRecorder) UserById(id interface{}) *gomock.Call {
+func (mr *MockUserMockRecorder) UserById(ctx, id interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UserById", reflect.TypeOf((*MockUser)(nil).UserById), id)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UserById", reflect.TypeOf((*MockUser)(nil).UserById), ctx, id)
 }
 
 // MockSegment is a mock of Segment interface.
@@ -117,30 +118,30 @@ func (m *MockSegment) EXPECT() *MockSegmentMockRecorder {
 }
 
 // CreateSegment mocks base method.
-func (m *MockSegment) CreateSegment(segment entity.Segment) (int, error) {
+func (m *MockSegment) CreateSegment(ctx context.Context, segment entity.Segment) (int, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "CreateSegment", segment)
+	ret := m.ctrl.Call(m, "CreateSegment", ctx, segment)
 	ret0, _ := ret[0].(int)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // CreateSegment indicates an expected call of CreateSegment.
-func (mr *MockSegmentMockRecorder) CreateSegment(segment interface{}) *gomock.Call {
+func (mr *MockSegmentMockRecorder) CreateSegment(ctx, segment interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateSegment", reflect.TypeOf((*MockSegment)(nil).CreateSegment), segment)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateSegment", reflect.TypeOf((*MockSegment)(nil).CreateSegment), ctx, segment)
 }
 
 // DeleteSegment mocks base method.
-func (m *MockSegment) DeleteSegment(name string) error {
+func (m *MockSegment) DeleteSegment(ctx context.Context, name string) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "DeleteSegment", name)
+	ret := m.ctrl.Call(m, "DeleteSegment", ctx, name)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // DeleteSegment indicates an expected call of DeleteSegment.
-func (mr *MockSegmentMockRecorder) DeleteSegment(name interface{}) *gomock.Call {
+func (mr *MockSegmentMockRecorder) DeleteSegment(ctx, name interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteSegment", reflect.TypeOf((*MockSegment)(nil).DeleteSegment), name)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteSegment", reflect.TypeOf((*MockSegment)(nil).DeleteSegment), ctx, name)
 }

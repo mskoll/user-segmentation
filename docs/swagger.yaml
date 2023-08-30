@@ -1,0 +1,292 @@
+basePath: /
+definitions:
+  echo.HTTPError:
+    properties:
+      message: {}
+    type: object
+  internal_handler.ResponseId:
+    properties:
+      id:
+        type: integer
+    type: object
+  internal_handler.ResponseMessage:
+    properties:
+      message:
+        type: string
+    type: object
+  userSegmentation_internal_entity.AddDelSegments:
+    properties:
+      to_add:
+        items:
+          $ref: '#/definitions/userSegmentation_internal_entity.SegmentToUser'
+        type: array
+      to_del:
+        items:
+          $ref: '#/definitions/userSegmentation_internal_entity.SegmentToUser'
+        type: array
+      user_id:
+        type: integer
+    required:
+    - user_id
+    type: object
+  userSegmentation_internal_entity.Operation:
+    properties:
+      datetime:
+        type: string
+      operation:
+        type: string
+      segment_name:
+        type: string
+      user_id:
+        type: integer
+    type: object
+  userSegmentation_internal_entity.Segment:
+    properties:
+      id:
+        type: integer
+      name:
+        type: string
+      percent:
+        type: integer
+    required:
+    - name
+    type: object
+  userSegmentation_internal_entity.SegmentList:
+    properties:
+      segments:
+        items:
+          $ref: '#/definitions/userSegmentation_internal_entity.Segment'
+        type: array
+      user:
+        $ref: '#/definitions/userSegmentation_internal_entity.User'
+    type: object
+  userSegmentation_internal_entity.SegmentToUser:
+    properties:
+      name:
+        type: string
+      ttl:
+        type: string
+    required:
+    - name
+    type: object
+  userSegmentation_internal_entity.User:
+    properties:
+      id:
+        type: integer
+      username:
+        type: string
+    required:
+    - username
+    type: object
+  userSegmentation_internal_entity.UserOperations:
+    properties:
+      month:
+        type: integer
+      user_id:
+        type: integer
+      year:
+        type: integer
+    required:
+    - month
+    - user_id
+    - year
+    type: object
+host: localhost:8000
+info:
+  contact: {}
+  title: User Segmentation Service
+  version: "1.0"
+paths:
+  /segment/:
+    delete:
+      consumes:
+      - application/json
+      description: create segment
+      parameters:
+      - description: segment
+        in: body
+        name: segment
+        required: true
+        schema:
+          $ref: '#/definitions/userSegmentation_internal_entity.Segment'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_handler.ResponseMessage'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/echo.HTTPError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/echo.HTTPError'
+      summary: delete segment
+      tags:
+      - segment
+    post:
+      consumes:
+      - application/json
+      description: create segment
+      parameters:
+      - description: segment
+        in: body
+        name: segment
+        required: true
+        schema:
+          $ref: '#/definitions/userSegmentation_internal_entity.Segment'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_handler.ResponseId'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/echo.HTTPError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/echo.HTTPError'
+      summary: create segment
+      tags:
+      - segment
+  /user/:
+    post:
+      consumes:
+      - application/json
+      description: create user
+      parameters:
+      - description: user
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/userSegmentation_internal_entity.User'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_handler.ResponseId'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/echo.HTTPError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/echo.HTTPError'
+      summary: create user
+      tags:
+      - user
+  /user/:id:
+    get:
+      consumes:
+      - application/json
+      description: get user by id
+      parameters:
+      - description: user id
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/userSegmentation_internal_entity.SegmentList'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/echo.HTTPError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/echo.HTTPError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/echo.HTTPError'
+      summary: user by id
+      tags:
+      - user
+  /user/operations:
+    post:
+      consumes:
+      - application/json
+      description: report on adding and removing a user to a segment
+      parameters:
+      - description: userOperations
+        in: body
+        name: userOperations
+        required: true
+        schema:
+          $ref: '#/definitions/userSegmentation_internal_entity.UserOperations'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/userSegmentation_internal_entity.Operation'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/echo.HTTPError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/echo.HTTPError'
+      summary: user operation
+      tags:
+      - user
+  /user/segment:
+    post:
+      consumes:
+      - application/json
+      description: add and delete user segments
+      parameters:
+      - description: segments
+        in: body
+        name: segments
+        required: true
+        schema:
+          $ref: '#/definitions/userSegmentation_internal_entity.AddDelSegments'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_handler.ResponseMessage'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/echo.HTTPError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/echo.HTTPError'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/echo.HTTPError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/echo.HTTPError'
+      summary: add and delete user segments
+      tags:
+      - user
+swagger: "2.0"

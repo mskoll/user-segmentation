@@ -1,6 +1,7 @@
 package repo
 
 import (
+	"context"
 	"database/sql"
 	"fmt"
 	"github.com/jmoiron/sqlx"
@@ -17,7 +18,7 @@ func NewUser(db *sqlx.DB) *UserRepo {
 	return &UserRepo{db: db}
 }
 
-func (r *UserRepo) CreateUser(user entity.User) (int, error) {
+func (r *UserRepo) CreateUser(ctx context.Context, user entity.User) (int, error) {
 
 	tx, err := r.db.Begin()
 	if err != nil {
@@ -25,7 +26,7 @@ func (r *UserRepo) CreateUser(user entity.User) (int, error) {
 	}
 
 	userQuery := "INSERT INTO users (username) VALUES ($1) RETURNING id"
-	row := tx.QueryRow(userQuery, user.Username)
+	row := tx.QueryRowContext(ctx, userQuery, user.Username)
 
 	var userId int
 	if err = row.Scan(&userId); err != nil {
@@ -36,13 +37,13 @@ func (r *UserRepo) CreateUser(user entity.User) (int, error) {
 	return userId, tx.Commit()
 }
 
-func (r *UserRepo) UserById(id int) (entity.User, error) {
+func (r *UserRepo) UserById(ctx context.Context, id int) (entity.User, error) {
 
 	var user entity.User
 
 	userQuery := "SELECT * FROM users WHERE id = $1"
 
-	err := r.db.Get(&user, userQuery, id)
+	err := r.db.GetContext(ctx, &user, userQuery, id)
 	if err != nil {
 
 		if errors.Is(err, sql.ErrNoRows) {
@@ -55,14 +56,14 @@ func (r *UserRepo) UserById(id int) (entity.User, error) {
 	return user, nil
 }
 
-func (r *UserRepo) UsersSegments(id int) ([]entity.Segment, error) {
+func (r *UserRepo) UsersSegments(ctx context.Context, id int) ([]entity.Segment, error) {
 
 	var segments []entity.Segment
 
 	segmentQuery := "SELECT st.id, st.name, st.percent FROM segment st INNER JOIN user_segment ust ON st.id = ust.segment_id " +
 		"WHERE ust.user_id = $1 AND (ust.deleted_at IS NULL OR ust.deleted_at > now())"
 
-	err := r.db.Select(&segments, segmentQuery, id)
+	err := r.db.SelectContext(ctx, &segments, segmentQuery, id)
 	if err != nil {
 		return nil, errors.Wrap(err, fmt.Sprintf("UserRepo.UsersSegments: %s", err.Error()))
 	}
@@ -70,7 +71,7 @@ func (r *UserRepo) UsersSegments(id int) ([]entity.Segment, error) {
 	return segments, nil
 }
 
-func (r *UserRepo) AddSegment(segments []entity.UserSegment) error {
+func (r *UserRepo) AddSegment(ctx context.Context, segments []entity.UserSegment) error {
 
 	tx, err := r.db.Begin()
 	if err != nil {
@@ -79,7 +80,7 @@ func (r *UserRepo) AddSegment(segments []entity.UserSegment) error {
 
 	usersSegmentQuery := "INSERT INTO user_segment (user_id, segment_id, deleted_at) VALUES (:user_id, :segment_id, :deleted_at)"
 
-	if _, err = r.db.NamedExec(usersSegmentQuery, segments); err != nil {
+	if _, err = r.db.NamedExecContext(ctx, usersSegmentQuery, segments); err != nil {
 		tx.Rollback()
 		return errors.Wrap(err, fmt.Sprintf("UserRepo.AddSegment: %s", err.Error()))
 	}
@@ -87,7 +88,7 @@ func (r *UserRepo) AddSegment(segments []entity.UserSegment) error {
 	return tx.Commit()
 }
 
-func (r *UserRepo) DeleteSegmentFromUser(segments []entity.UserSegment) error {
+func (r *UserRepo) DeleteSegmentFromUser(ctx context.Context, segments []entity.UserSegment) error {
 
 	tx, err := r.db.Begin()
 	if err != nil {
@@ -97,7 +98,7 @@ func (r *UserRepo) DeleteSegmentFromUser(segments []entity.UserSegment) error {
 	for _, segment := range segments {
 
 		usersSegmentQuery := "UPDATE user_segment SET deleted_at = now() WHERE user_id = $1 AND segment_id = $2"
-		if _, err = r.db.Exec(usersSegmentQuery, segment.UserId, segment.SegmentId); err != nil {
+		if _, err = r.db.ExecContext(ctx, usersSegmentQuery, segment.UserId, segment.SegmentId); err != nil {
 			tx.Rollback()
 			return errors.Wrap(err, fmt.Sprintf("UserRepo.DeleteSegmentFromUser: %s", err.Error()))
 		}
@@ -106,7 +107,7 @@ func (r *UserRepo) DeleteSegmentFromUser(segments []entity.UserSegment) error {
 	return tx.Commit()
 }
 
-func (r *UserRepo) Operations(usersOperations entity.UserOperations) ([]entity.Operation, error) {
+func (r *UserRepo) Operations(ctx context.Context, usersOperations entity.UserOperations) ([]entity.Operation, error) {
 
 	var operations []entity.Operation
 
@@ -119,7 +120,7 @@ func (r *UserRepo) Operations(usersOperations entity.UserOperations) ([]entity.O
 		"DATE_PART('month', ust.deleted_at) = $5 AND DATE_PART('year', ust.deleted_at) = $6 " +
 		"ORDER BY datetime"
 
-	if err := r.db.Select(&operations, operationsQuery, usersOperations.UserId, usersOperations.Month, usersOperations.Year,
+	if err := r.db.SelectContext(ctx, &operations, operationsQuery, usersOperations.UserId, usersOperations.Month, usersOperations.Year,
 		usersOperations.UserId, usersOperations.Month, usersOperations.Year); err != nil {
 		return nil, errors.Wrap(err, fmt.Sprintf("UserRepo.Operations: %s", err.Error()))
 	}
@@ -127,13 +128,13 @@ func (r *UserRepo) Operations(usersOperations entity.UserOperations) ([]entity.O
 	return operations, nil
 }
 
-func (r *UserRepo) SegmentsIdsByName(segments []entity.SegmentToUser) ([]int, error) {
+func (r *UserRepo) SegmentsIdsByName(ctx context.Context, segments []entity.SegmentToUser) ([]int, error) {
 
 	segmentQuery := "SELECT id FROM segment WHERE name LIKE $1"
 
 	segmentIds := make([]int, len(segments))
 	for i, segment := range segments {
-		if err := r.db.Get(&segmentIds[i], segmentQuery, segment.Name); err != nil {
+		if err := r.db.GetContext(ctx, &segmentIds[i], segmentQuery, segment.Name); err != nil {
 
 			if errors.Is(err, sql.ErrNoRows) {
 				return []int{}, errors.Wrap(utils.ErrNotFound, fmt.Sprintf("Segment %v not found", segment.Name))

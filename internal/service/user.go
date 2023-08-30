@@ -1,6 +1,7 @@
 package service
 
 import (
+	"context"
 	"fmt"
 	"github.com/pkg/errors"
 	"userSegmentation/internal/entity"
@@ -16,34 +17,34 @@ func NewUser(repo repo.User) *UserService {
 	return &UserService{repo: repo}
 }
 
-func (s *UserService) UserById(id int) (entity.SegmentList, error) {
+func (s *UserService) UserById(ctx context.Context, id int) (entity.SegmentList, error) {
 
 	var segments entity.SegmentList
 
-	user, err := s.repo.UserById(id)
+	user, err := s.repo.UserById(ctx, id)
 	if err != nil {
 		return entity.SegmentList{}, err
 	}
 
 	segments.User = user
 
-	segments.Segments, err = s.repo.UsersSegments(id)
+	segments.Segments, err = s.repo.UsersSegments(ctx, id)
 
 	return segments, err
 }
 
-func (s *UserService) CreateUser(user entity.User) (int, error) {
+func (s *UserService) CreateUser(ctx context.Context, user entity.User) (int, error) {
 
-	id, err := s.repo.CreateUser(user)
+	id, err := s.repo.CreateUser(ctx, user)
 
 	return id, err
 }
 
-func (s *UserService) AddDeleteSegment(segments entity.AddDelSegments) error {
+func (s *UserService) AddDeleteSegment(ctx context.Context, segments entity.AddDelSegments) error {
 
 	if len(segments.ToDel) != 0 {
 
-		idsToDel, err := s.repo.SegmentsIdsByName(segments.ToDel)
+		idsToDel, err := s.repo.SegmentsIdsByName(ctx, segments.ToDel)
 		if err != nil {
 			return err
 		}
@@ -56,7 +57,7 @@ func (s *UserService) AddDeleteSegment(segments entity.AddDelSegments) error {
 			}
 		}
 
-		if err = s.repo.DeleteSegmentFromUser(userSegmentToDel); err != nil {
+		if err = s.repo.DeleteSegmentFromUser(ctx, userSegmentToDel); err != nil {
 			return err
 		}
 	}
@@ -65,7 +66,7 @@ func (s *UserService) AddDeleteSegment(segments entity.AddDelSegments) error {
 		return nil
 	}
 
-	currentSegments, err := s.repo.UsersSegments(segments.UserId)
+	currentSegments, err := s.repo.UsersSegments(ctx, segments.UserId)
 	if err != nil {
 		return err
 	}
@@ -79,7 +80,7 @@ func (s *UserService) AddDeleteSegment(segments entity.AddDelSegments) error {
 		}
 	}
 
-	idsToAdd, err := s.repo.SegmentsIdsByName(segments.ToAdd)
+	idsToAdd, err := s.repo.SegmentsIdsByName(ctx, segments.ToAdd)
 	if err != nil {
 		return err
 	}
@@ -93,14 +94,14 @@ func (s *UserService) AddDeleteSegment(segments entity.AddDelSegments) error {
 		}
 	}
 
-	err = s.repo.AddSegment(userSegmentToAdd)
+	err = s.repo.AddSegment(ctx, userSegmentToAdd)
 
 	return err
 }
 
-func (s *UserService) Operations(userOperations entity.UserOperations) ([]entity.Operation, error) {
+func (s *UserService) Operations(ctx context.Context, userOperations entity.UserOperations) ([]entity.Operation, error) {
 
-	operations, err := s.repo.Operations(userOperations)
+	operations, err := s.repo.Operations(ctx, userOperations)
 	if err != nil {
 		return []entity.Operation{}, err
 	}

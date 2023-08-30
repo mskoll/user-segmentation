@@ -2,6 +2,7 @@ package handler
 
 import (
 	"bytes"
+	"context"
 	"github.com/golang/mock/gomock"
 	"github.com/labstack/echo/v4"
 	"github.com/stretchr/testify/assert"
@@ -11,11 +12,12 @@ import (
 	"userSegmentation/internal/entity"
 	"userSegmentation/internal/service"
 	mock_service "userSegmentation/internal/service/mocks"
+	"userSegmentation/internal/utils"
 )
 
 func TestHandler_createUser(t *testing.T) {
 
-	type mockBehavior func(r *mock_service.MockUser, user entity.User)
+	type mockBehavior func(r *mock_service.MockUser, ctx context.Context, user entity.User)
 	tests := []struct {
 		name                 string
 		inputBody            string
@@ -30,8 +32,8 @@ func TestHandler_createUser(t *testing.T) {
 			inputUser: entity.User{
 				Username: "test-username",
 			},
-			mockBehavior: func(r *mock_service.MockUser, user entity.User) {
-				r.EXPECT().CreateUser(user).Return(1, nil)
+			mockBehavior: func(r *mock_service.MockUser, ctx context.Context, user entity.User) {
+				r.EXPECT().CreateUser(ctx, user).Return(1, nil)
 			},
 			expectedStatusCode:   200,
 			expectedResponseBody: `{"id":1}` + "\n",
@@ -39,18 +41,19 @@ func TestHandler_createUser(t *testing.T) {
 		{
 			name:                 "incorrect user data",
 			inputBody:            `fdnkgj4387gt`,
-			mockBehavior:         func(r *mock_service.MockUser, user entity.User) {},
+			mockBehavior:         func(r *mock_service.MockUser, ctx context.Context, user entity.User) {},
 			expectedStatusCode:   400,
 			expectedResponseBody: `{"message":"incorrect user data: bad request"}` + "\n",
 		},
 	}
+	utils.CreateLogger()
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			c := gomock.NewController(t)
 			defer c.Finish()
 
 			repo := mock_service.NewMockUser(c)
-			tt.mockBehavior(repo, tt.inputUser)
+			tt.mockBehavior(repo, context.Background(), tt.inputUser)
 
 			services := &service.Service{User: repo}
 			handler := New(services)
@@ -72,7 +75,7 @@ func TestHandler_createUser(t *testing.T) {
 
 func TestHandler_operations(t *testing.T) {
 
-	type mockBehavior func(r *mock_service.MockUser, userOperations entity.UserOperations)
+	type mockBehavior func(r *mock_service.MockUser, ctx context.Context, userOperations entity.UserOperations)
 	tests := []struct {
 		name                 string
 		inputBody            string
@@ -89,8 +92,8 @@ func TestHandler_operations(t *testing.T) {
 				Month:  8,
 				Year:   2023,
 			},
-			mockBehavior: func(r *mock_service.MockUser, userOperations entity.UserOperations) {
-				r.EXPECT().Operations(userOperations).Return([]entity.Operation{
+			mockBehavior: func(r *mock_service.MockUser, ctx context.Context, userOperations entity.UserOperations) {
+				r.EXPECT().Operations(ctx, userOperations).Return([]entity.Operation{
 					{
 						UserId: 1, SegmentName: "test-segment-name", Operation: "created",
 						Datetime: time.Date(2023, time.August, 8, 12, 0, 0, 0, time.UTC),
@@ -108,18 +111,19 @@ func TestHandler_operations(t *testing.T) {
 		{
 			name:                 "incorrect input",
 			inputBody:            `ggvk`,
-			mockBehavior:         func(r *mock_service.MockUser, userOperations entity.UserOperations) {},
+			mockBehavior:         func(r *mock_service.MockUser, ctx context.Context, userOperations entity.UserOperations) {},
 			expectedStatusCode:   400,
 			expectedResponseBody: `{"message":"incorrect input data: bad request"}` + "\n",
 		},
 	}
+	utils.CreateLogger()
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			c := gomock.NewController(t)
 			defer c.Finish()
 
 			repo := mock_service.NewMockUser(c)
-			tt.mockBehavior(repo, tt.inputUser)
+			tt.mockBehavior(repo, context.Background(), tt.inputUser)
 
 			services := &service.Service{User: repo}
 			handler := New(services)

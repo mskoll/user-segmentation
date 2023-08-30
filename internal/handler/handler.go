@@ -2,6 +2,8 @@ package handler
 
 import (
 	"github.com/labstack/echo/v4"
+	echoSwagger "github.com/swaggo/echo-swagger"
+	_ "userSegmentation/docs"
 	"userSegmentation/internal/service"
 )
 
@@ -24,5 +26,7 @@ func (h *Handler) Route(e *echo.Echo) {
 	segment := e.Group("/segment")
 	segment.POST("/", h.createSegment)
 	segment.DELETE("/", h.deleteSegment)
+
+	e.GET("/swagger/*", echoSwagger.WrapHandler)
 
 }
