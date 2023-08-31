@@ -25,3 +25,5 @@ create table user_segment
 );
 
 create unique index idx_user_segment on user_segment (user_id, segment_id) where deleted_at is null;
+
+create unique index idx_segment on segment (name) where deleted_at is null;
